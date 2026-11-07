@@ -67,3 +67,27 @@ y luego `sudo systemctl enable --now jarvis`. (Comprueba la ruta de node con `wh
 - Error de red desde Vercel: revisa que `ALLOWED_ORIGIN` sea exactamente la dirección de la app y que el móvil tenga Tailscale encendido.
 - La temperatura sale "–": en Windows no hay forma fiable sin programas extra; en Linux se lee sola.
 - El micrófono no funciona: hace falta https y permiso del navegador. Si falla, el orbe abre la caja de texto.
+
+## v2: personalizar el PC desde el móvil
+
+Las escenas, los sitios y los ajustes se editan desde la app y se guardan en `server/data/config.json`
+(no se sube a git). Nuevos endpoints, todos con el mismo token:
+
+| Endpoint | Qué hace |
+|---|---|
+| `GET/PUT /api/config` | Escenas, sitios, apps fijadas y ajustes (se valida todo antes de guardar) |
+| `GET /api/apps` | Apps instaladas (Windows: Get-StartApps · Linux: .desktop · macOS: /Applications) |
+| `POST /api/open` | `{url}` abre una web (solo http/https) o `{app}` abre una app por su id |
+| `GET/POST /api/volume` | Leer o poner volumen, subir/bajar, silenciar |
+| `POST /api/media` | Reproducir/pausar, siguiente, anterior, parar |
+| `GET/POST /api/clipboard` | Leer o escribir el portapapeles del PC |
+| `GET /api/screenshot` | Captura de pantalla (PNG) |
+| `GET /api/processes` · `POST /api/kill` | Procesos principales; cerrar uno exige `ALLOW_EXEC=1` |
+
+Seguridad: el móvil nunca manda comandos sueltos, solo ids y valores. Los pasos de tipo «comando propio»
+y cerrar procesos solo funcionan con `ALLOW_EXEC=1`. Apagar, reiniciar y suspender siguen pidiendo confirmación.
+Para probar sin tocar nada: `JARVIS_DRY_RUN=1 node server.js`.
+
+Notas: el volumen en Windows se ajusta con las teclas multimedia (no se puede leer el valor actual);
+los controles multimedia en Linux necesitan `playerctl`; las capturas en Linux necesitan `grim`, `scrot` o `gnome-screenshot`
+y una sesión de escritorio activa (si el servidor corre como servicio sin pantalla, no funcionarán).

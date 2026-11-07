@@ -18,7 +18,8 @@
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const vibrate = (ms = 10) => navigator.vibrate && navigator.vibrate(ms);
+let hapticsOn = true;   // lo cambian los ajustes (pc.js)
+const vibrate = (ms = 10) => hapticsOn && navigator.vibrate && navigator.vibrate(ms);
 const TAU = Math.PI * 2;
 
 /* ==========================================================================
@@ -27,7 +28,7 @@ const TAU = Math.PI * 2;
 const CFG_KEY = "jarvis-cfg";
 const HIST_KEY = "jarvis-chat";
 
-const cfg = Object.assign({ demo: true, url: "", token: "", tts: false }, readJSON(CFG_KEY, {}));
+const cfg = Object.assign({ demo: true, url: "", token: "", tts: false, rate: 1, lang: "es-ES" }, readJSON(CFG_KEY, {}));
 
 function readJSON(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
@@ -78,7 +79,7 @@ const api = {
   async scene(id) {
     if (!cfg.demo) return call("/api/scene", "POST", { id });
     await sleep(700);
-    return { ok: true, message: "Escena «" + id + "» activada (simulado)" };
+    return { ok: true, message: "Escena «" + id + "» activada (simulado)", actions: [] };
   },
 
   async action(id) {
@@ -180,6 +181,7 @@ function showView(name) {
     t.setAttribute("aria-selected", on);
   });
   if (name === "control") refreshStats();
+  if (typeof onViewShown === "function") onViewShown(name);
   vibrate(6);
 }
 $$(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
@@ -253,6 +255,14 @@ const orb = (() => {
     speaking:  { color: [61, 227, 255],  spin: 0.00032, energy: 0.04,  ring: 1.4 },
     error:     { color: [255, 93, 115],  spin: 0.0001,  energy: 0.06,  ring: 0.6 },
   };
+
+  // Estilos del orbe (personalizables desde Ajustes)
+  const STYLES = {
+    plasma:  { dots: 1,    edges: 1,   rings: 1,   glow: 1 },
+    anillos: { dots: 0.35, edges: 0.3, rings: 1.9, glow: 0.8 },
+    cristal: { dots: 0.5,  edges: 2.4, rings: 0.6, glow: 1.25 },
+  };
+  let style = STYLES.plasma;
 
   let state = "idle";
   let color = [...params.idle.color];
@@ -335,7 +345,7 @@ const orb = (() => {
 
     // Resplandor
     const g = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R * 2.3);
-    g.addColorStop(0, `rgba(${rgb},${0.24 + energy * 1.2})`);
+    g.addColorStop(0, `rgba(${rgb},${(0.24 + energy * 1.2) * style.glow})`);
     g.addColorStop(0.5, `rgba(${rgb},${0.07 + energy * 0.4})`);
     g.addColorStop(1, `rgba(${rgb},0)`);
     ctx.fillStyle = g;
@@ -358,11 +368,12 @@ const orb = (() => {
     }
 
     // Anillos de fondo
-    ring(cx, cy, R, 1.34, 1.15, 0.5, ringAngle, 0.5 * e, rgb, 1.1);
+    ring(cx, cy, R, 1.34, 1.15, 0.5, ringAngle, 0.5 * e * style.rings, rgb, 1.1);
+    if (style.rings > 1.5) ring(cx, cy, R, 1.9, 0.75, -0.6, -ringAngle * 0.6, 0.4 * e, rgb, 1, [2, 7]);
 
     // Red de conexiones (solo la cara visible)
     ctx.lineWidth = 0.6;
-    ctx.strokeStyle = `rgba(${rgb},${(0.13 + energy * 0.9) * e})`;
+    ctx.strokeStyle = `rgba(${rgb},${Math.min(0.9, (0.13 + energy * 0.9) * style.edges) * e})`;
     ctx.beginPath();
     for (let k = 0; k < edges.length; k++) {
       const a = edges[k][0], b = edges[k][1];
@@ -379,7 +390,7 @@ const orb = (() => {
         ctx.moveTo(X[i] + rad, Y[i]);
         ctx.arc(X[i], Y[i], rad, 0, TAU);
       }
-      ctx.fillStyle = `rgba(${rgb},${0.14 + b * 0.2})`;
+      ctx.fillStyle = `rgba(${rgb},${(0.14 + b * 0.2) * style.dots})`;
       ctx.fill();
     }
 
@@ -393,8 +404,8 @@ const orb = (() => {
     ctx.beginPath(); ctx.arc(cx, cy, cr * 2.2, 0, TAU); ctx.fill();
 
     // Anillos de primer plano + satélite
-    const s1 = ring(cx, cy, R, 1.2, 0.42, -0.35, -ringAngle * 1.3, 0.75 * e, rgb, 1.4, null, -ringAngle * 1.3 + 1.2);
-    ring(cx, cy, R, 1.52, 1.0, 0.95, ringAngle * 0.8, 0.5 * e, rgb, 1.1, [3, 9]);
+    const s1 = ring(cx, cy, R, 1.2, 0.42, -0.35, -ringAngle * 1.3, Math.min(1, 0.75 * e * style.rings), rgb, 1.4, null, -ringAngle * 1.3 + 1.2);
+    ring(cx, cy, R, 1.52, 1.0, 0.95, ringAngle * 0.8, 0.5 * e * style.rings, rgb, 1.1, [3, 9]);
     ring(cx, cy, R, 1.72, 0.2, 0.15, -ringAngle * 0.5, 0.3 * e, rgb, 1, [1, 6]);
     if (s1) {
       const sg = ctx.createRadialGradient(s1[0], s1[1], 0, s1[0], s1[1], 9);
@@ -425,7 +436,9 @@ const orb = (() => {
     bump(v = 0.7) { levelTarget = Math.max(levelTarget, v); },   // "volumen" de la voz
     pulse() { pulseV = 1; },                                     // latido al tocar
     spin(dx) { spinVel += dx * 0.00002; },                       // arrastrar para girar
-    assembleNow() { t0 = -1e6; },                                // saltar la animación de arranque
+    assembleNow() { t0 = -1e6; },
+    setStyle(name) { style = STYLES[name] || STYLES.plasma; },
+    setAccent(rgb) { params.idle.color = [...rgb]; params.speaking.color = [...rgb]; },                                // saltar la animación de arranque
   };
 })();
 
@@ -490,7 +503,8 @@ function speak(text) {
   return new Promise((resolve) => {
     if (!cfg.tts || !("speechSynthesis" in window)) return resolve();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = "es-ES";
+    u.lang = cfg.lang;
+    u.rate = cfg.rate;
     u.onboundary = () => orb.bump(0.8);
     u.onend = u.onerror = () => resolve();
     speechSynthesis.cancel();
@@ -583,7 +597,7 @@ let srBlocked = false;
 
 if (SR) {
   rec = new SR();
-  rec.lang = "es-ES";
+  rec.lang = cfg.lang;
   rec.interimResults = true;
   rec.onspeechstart = () => orb.bump(0.8);
   rec.onresult = (e) => {
@@ -663,7 +677,6 @@ textbar.addEventListener("submit", (e) => {
 });
 
 // Atajos
-$$("#chips .chip").forEach((c) => c.addEventListener("click", () => handleUtterance(c.dataset.text)));
 
 // Voz de Jarvis (activar o silenciar)
 const dockSpeaker = $("#dockSpeaker");
@@ -766,22 +779,6 @@ setInterval(tickClock, 20000);
 /* ==========================================================================
    8. Escenas y acciones rápidas
    ========================================================================== */
-$$("#scenes .panel-btn").forEach((btn) => {
-  btn.addEventListener("click", async () => {
-    if (btn.classList.contains("busy")) return;
-    btn.classList.add("busy");
-    vibrate(15);
-    try {
-      const r = await api.scene(btn.dataset.scene);
-      toast(r.message || "Escena activada");
-    } catch (err) {
-      toast("Error: " + err.message);
-    } finally {
-      btn.classList.remove("busy");
-    }
-  });
-});
-
 $$("#actions .action").forEach((btn) => {
   btn.addEventListener("click", async () => {
     vibrate(15);

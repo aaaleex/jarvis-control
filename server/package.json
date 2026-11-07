@@ -1,6 +1,6 @@
 {
   "name": "jarvis-server",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Servidor de Jarvis: sirve la app del móvil y ejecuta las órdenes en el PC",
   "main": "server.js",
   "scripts": {

@@ -1,7 +1,7 @@
 // Service worker: deja la app instalable y abrible sin red (solo la "carcasa").
 // Las llamadas a /api/ nunca se cachean.
-const CACHE = "jarvis-shell-v2";
-const SHELL = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
+const CACHE = "jarvis-shell-v3";
+const SHELL = ["./", "./index.html", "./styles.css", "./app.js", "./pc.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)));

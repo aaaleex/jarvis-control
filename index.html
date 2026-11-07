@@ -71,13 +71,7 @@
           <div class="tasks" id="tasks"></div>
         </div>
 
-        <div class="chips" id="chips">
-          <button class="chip" data-text="¿Cómo está el PC?">Estado del PC</button>
-          <button class="chip" data-text="Activa el modo gaming">Modo gaming</button>
-          <button class="chip" data-text="Abre Spotify">Abre Spotify</button>
-          <button class="chip" data-text="Haz una captura de pantalla">Captura</button>
-          <button class="chip" data-text="Bloquea el PC">Bloquear</button>
-        </div>
+        <div class="chips" id="chips"></div>
 
         <form class="textbar" id="textbar" hidden autocomplete="off">
           <input id="textInput" type="text" placeholder="Escribe una orden…" enterkeyhint="send" autocapitalize="sentences" aria-label="Orden para Jarvis">
@@ -124,33 +118,76 @@
           <p class="uptime" id="uptime">TIEMPO ENCENDIDO · –</p>
 
           <h2 class="sect">Escenas</h2>
-          <div class="grid2" id="scenes">
-            <button class="panel-btn hud" data-scene="gaming">
-              <svg viewBox="0 0 24 24"><path d="M7 8h10a5 5 0 0 1 5 5v1.5a3 3 0 0 1-5.3 1.9L15 14.5H9l-1.7 1.9A3 3 0 0 1 2 14.5V13a5 5 0 0 1 5-5z"/><path d="M8 10.5v3M6.5 12h3"/><path d="M15.5 11.5h.01M17.5 13.5h.01"/></svg>
-              <strong>Gaming</strong><small>Epic · Discord · Spotify</small>
-            </button>
-            <button class="panel-btn hud" data-scene="trabajo">
-              <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19.5h20"/></svg>
-              <strong>Trabajo</strong><small>VS Code · Navegador · Obsidian</small>
-            </button>
-            <button class="panel-btn hud" data-scene="cine">
-              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></svg>
-              <strong>Cine</strong><small>Pantalla completa · Volumen alto</small>
-            </button>
-            <button class="panel-btn hud" data-scene="noche">
-              <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>
-              <strong>Noche</strong><small>Brillo bajo · Sin avisos</small>
-            </button>
-          </div>
+          <div class="grid2" id="scenes"></div>
 
-          <h2 class="sect">Acciones rápidas</h2>
-          <div class="grid3" id="actions">
+          <h2 class="sect">Energía y sesión</h2>
+          <div class="grid2" id="actions">
             <button class="action hud" data-action="lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Bloquear</button>
-            <button class="action hud" data-action="mute"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 9l4 6M21 9l-4 6"/></svg>Silenciar</button>
-            <button class="action hud" data-action="screenshot"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M9 6l1.5-2h3L15 6"/></svg>Captura</button>
             <button class="action hud" data-action="sleep" data-confirm="¿Suspender el PC? Tendrás que despertarlo en persona."><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>Suspender</button>
             <button class="action hud danger" data-action="reboot" data-confirm="¿Reiniciar el PC? Se cerrarán las apps abiertas."><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg>Reiniciar</button>
             <button class="action hud danger" data-action="shutdown" data-confirm="¿Apagar el PC? No podrás volver a encenderlo desde el móvil."><svg viewBox="0 0 24 24"><path d="M12 3v9M6.3 6.8a8 8 0 1 0 11.4 0"/></svg>Apagar</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ACCESOS ============ -->
+      <section class="view" id="view-links" aria-label="Accesos">
+        <div class="scroll">
+          <form class="urlbar hud" id="urlForm" autocomplete="off">
+            <input id="urlInput" type="text" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Abrir una web en el PC…" aria-label="Dirección web">
+            <button type="submit" class="send" aria-label="Abrir en el PC"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </form>
+          <h2 class="sect">Sitios</h2>
+          <div class="grid3 tiles" id="sites"></div>
+          <h2 class="sect">Apps del PC</h2>
+          <div class="grid3 tiles" id="pins"></div>
+        </div>
+      </section>
+
+      <!-- ============ PC ============ -->
+      <section class="view" id="view-pc" aria-label="Controles del PC">
+        <div class="scroll">
+          <h2 class="sect">Sonido</h2>
+          <div class="hud box">
+            <div class="vol">
+              <button class="round" id="volDown" aria-label="Bajar volumen"><svg viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5zM15.5 12h4"/></svg></button>
+              <input type="range" id="volRange" min="0" max="100" step="1" value="50" aria-label="Volumen">
+              <button class="round" id="volUp" aria-label="Subir volumen"><svg viewBox="0 0 24 24"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5zM15.5 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg></button>
+              <button class="round" id="volMute" aria-label="Silenciar"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 9l4 6M21 9l-4 6"/></svg></button>
+            </div>
+            <div class="vol-read"><span>VOLUMEN</span><b id="volVal">–</b></div>
+          </div>
+
+          <h2 class="sect">Multimedia</h2>
+          <div class="media hud box">
+            <button class="round big" data-media="prev" aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M6 5v14M19 5l-10 7 10 7z"/></svg></button>
+            <button class="round big main" data-media="playpause" aria-label="Reproducir o pausar"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></svg></button>
+            <button class="round big" data-media="next" aria-label="Siguiente"><svg viewBox="0 0 24 24"><path d="M18 5v14M5 5l10 7-10 7z"/></svg></button>
+            <button class="round big" data-media="stop" aria-label="Parar"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg></button>
+          </div>
+
+          <h2 class="sect">Pantalla</h2>
+          <div class="hud box">
+            <div class="shot" id="shot"><span>Pulsa «Ver pantalla» para hacer una captura del PC</span></div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="shotBtn">Ver pantalla</button>
+              <button class="btn" id="shotSave" disabled>Guardar</button>
+            </div>
+          </div>
+
+          <h2 class="sect">Portapapeles</h2>
+          <div class="hud box">
+            <textarea id="clipText" rows="3" placeholder="Escribe aquí para enviarlo al portapapeles del PC" aria-label="Texto del portapapeles"></textarea>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="clipSend">Enviar al PC</button>
+              <button class="btn" id="clipGet">Traer del PC</button>
+            </div>
+          </div>
+
+          <h2 class="sect">Procesos</h2>
+          <div class="hud box">
+            <div class="procs" id="procs"><p class="empty">Pulsa «Actualizar» para ver qué consume el PC</p></div>
+            <div class="btn-row one"><button class="btn" id="procsBtn">Actualizar</button></div>
           </div>
         </div>
       </section>
@@ -184,6 +221,12 @@
       <button class="tab" role="tab" data-view="control" aria-selected="false">
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Control</span>
       </button>
+      <button class="tab" role="tab" data-view="links" aria-selected="false">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg><span>Accesos</span>
+      </button>
+      <button class="tab" role="tab" data-view="pc" aria-selected="false">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg><span>PC</span>
+      </button>
       <button class="tab" role="tab" data-view="terminal" aria-selected="false">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg><span>Terminal</span>
       </button>
@@ -216,6 +259,74 @@
     </form>
   </dialog>
 
+  <!-- Editor de escena -->
+  <dialog id="sceneDialog">
+    <div class="sheet">
+      <h3 id="sceneTitle">Escena</h3>
+      <div class="two">
+        <label class="field narrow"><span>Icono</span><input id="scIcon" maxlength="4" placeholder="🎮" aria-label="Icono"></label>
+        <label class="field"><span>Nombre</span><input id="scName" maxlength="40" placeholder="Gaming" autocomplete="off"></label>
+      </div>
+      <div class="steps" id="scSteps"></div>
+      <div class="add-step">
+        <select id="scAddType" aria-label="Tipo de paso">
+          <option value="open_url">Abrir una web</option>
+          <option value="open_app">Abrir una app</option>
+          <option value="volume">Poner el volumen</option>
+          <option value="mute">Silenciar / activar sonido</option>
+          <option value="media">Tecla multimedia</option>
+          <option value="wait">Esperar</option>
+          <option value="command" id="scCmdOpt" hidden>Comando propio</option>
+        </select>
+        <button type="button" class="btn" id="scAdd">Añadir</button>
+      </div>
+      <p class="hint" id="scError" role="alert"></p>
+      <div class="sheet-actions three">
+        <button type="button" class="btn btn-ghost" id="scDelete">Borrar</button>
+        <button type="button" class="btn" id="scTest">Probar</button>
+        <button type="button" class="btn btn-primary" id="scSave">Guardar</button>
+      </div>
+      <button type="button" class="link" id="scClose">Cerrar</button>
+    </div>
+  </dialog>
+
+  <!-- Editor de sitio -->
+  <dialog id="siteDialog">
+    <div class="sheet">
+      <h3 id="siteTitle">Sitio</h3>
+      <div class="two">
+        <label class="field narrow"><span>Icono</span><input id="stIcon" maxlength="4" placeholder="🌐" aria-label="Icono"></label>
+        <label class="field"><span>Nombre</span><input id="stName" maxlength="40" placeholder="YouTube" autocomplete="off"></label>
+      </div>
+      <label class="field"><span>Dirección</span><input id="stUrl" type="url" inputmode="url" placeholder="https://…" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+      <p class="hint" id="stError" role="alert"></p>
+      <div class="sheet-actions three">
+        <button type="button" class="btn btn-ghost" id="stDelete">Borrar</button>
+        <button type="button" class="btn" id="stClose">Cerrar</button>
+        <button type="button" class="btn btn-primary" id="stSave">Guardar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Selector de apps -->
+  <dialog id="appsDialog">
+    <div class="sheet">
+      <h3>Apps del PC</h3>
+      <label class="field"><span>Buscar</span><input id="appSearch" type="search" placeholder="Spotify, Discord, Code…" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+      <div class="applist" id="appList"></div>
+      <div class="sheet-actions">
+        <button type="button" class="btn" id="appsRefresh">Recargar lista</button>
+        <button type="button" class="btn btn-primary" id="appsClose">Cerrar</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Pantalla a tamaño completo -->
+  <dialog id="shotDialog" class="shot-dialog">
+    <img id="shotFull" alt="Captura de la pantalla del PC">
+    <button type="button" class="btn" id="shotFullClose">Cerrar</button>
+  </dialog>
+
   <!-- Ajustes -->
   <dialog id="settingsDialog">
     <form method="dialog" class="sheet" id="settingsForm">
@@ -241,6 +352,33 @@
         <input type="checkbox" id="setTts" class="switch">
       </label>
 
+      <h4 class="sub">Personalizar</h4>
+      <div class="field"><span>Color</span>
+        <div class="swatches" id="swatches" role="radiogroup" aria-label="Color de acento"></div>
+      </div>
+      <div class="field"><span>Estilo del orbe</span>
+        <div class="seg" id="orbStyles" role="radiogroup" aria-label="Estilo del orbe">
+          <button type="button" data-orb="plasma" role="radio">Plasma</button>
+          <button type="button" data-orb="anillos" role="radio">Anillos</button>
+          <button type="button" data-orb="cristal" role="radio">Cristal</button>
+        </div>
+      </div>
+      <label class="field"><span>Velocidad de la voz · <b id="rateVal">1.0×</b></span>
+        <input type="range" id="setRate" min="0.6" max="1.6" step="0.1" value="1">
+      </label>
+      <label class="field"><span>Idioma</span>
+        <select id="setLang">
+          <option value="es-ES">Español (España)</option>
+          <option value="es-MX">Español (México)</option>
+          <option value="en-US">English (US)</option>
+          <option value="ca-ES">Català</option>
+        </select>
+      </label>
+      <label class="row">
+        <span>Vibración<small>Respuesta háptica al tocar</small></span>
+        <input type="checkbox" id="setHaptics" class="switch">
+      </label>
+
       <div class="sheet-actions">
         <button value="cancel" class="btn">Cerrar</button>
         <button value="save" class="btn btn-primary" id="saveSettings">Guardar</button>
@@ -249,5 +387,6 @@
   </dialog>
 
   <script src="app.js"></script>
+  <script src="pc.js"></script>
 </body>
 </html>

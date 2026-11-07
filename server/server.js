@@ -253,6 +253,10 @@ async function chat(text) {
   if (/\bsuspende(r)?\b/.test(t))
     return { reply: "Necesito que lo confirmes.", confirm: { id: "sleep", text: "¿Suspender el PC? Tendrás que despertarlo en persona." } };
 
+  // Si hay un Jarvis propio conectado (JARVIS_CHAT_URL), él se encarga de todo lo demás:
+  // escenas, apps, pantallas... Con LOCAL_INTENTS=1 se usan también las de actions.json.
+  if (JARVIS_CHAT_URL && process.env.LOCAL_INTENTS !== "1") return askLLM(text);
+
   // Escenas
   if (/\b(modo|escena|activa|pon)\b/.test(t)) {
     for (const id of Object.keys(conf.scenes)) {

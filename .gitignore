@@ -4,3 +4,4 @@ server/.env
 server/audit.log
 server/actions.json
 node_modules/
+server/data/

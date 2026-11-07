@@ -10,6 +10,9 @@
      - /api/scene   escenas (se definen en actions.json)
      - /api/action  bloquear, suspender, reiniciar, apagar, silenciar (+ las tuyas)
      - /api/exec    terminal (desactivada salvo que pongas ALLOW_EXEC=1)
+     - v2: /api/config (escenas, sitios y ajustes editables desde el móvil), /api/apps,
+           /api/open, /api/volume, /api/media, /api/clipboard, /api/screenshot,
+           /api/processes, /api/kill
 
    Uso:   node server.js            (antes, crea el .env: mira el README)
           node server.js --gen-token   imprime un token nuevo
@@ -43,10 +46,12 @@ const OLLAMA_URL = (process.env.OLLAMA_URL || "http://127.0.0.1:11434").replace(
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "gemma3:4b";
 const JARVIS_CHAT_URL = process.env.JARVIS_CHAT_URL || "";
 const JARVIS_CHAT_TOKEN = process.env.JARVIS_CHAT_TOKEN || "";
+const DRY_RUN = process.env.JARVIS_DRY_RUN === "1";   // pruebas: registra lo que haría, sin tocar el PC
+const DATA_DIR = process.env.JARVIS_DATA_DIR ? path.resolve(process.env.JARVIS_DATA_DIR) : path.join(__dirname, "data");
 const PLAT = process.platform; // "win32" | "linux" | "darwin"
 // La app (index.html, app.js…) está en la carpeta de arriba. Solo se sirven estos archivos.
 const WEB_DIR = process.env.WEB_DIR ? path.resolve(process.env.WEB_DIR) : path.join(__dirname, "..");
-const WEB_FILES = new Set(["index.html", "styles.css", "app.js", "sw.js", "manifest.webmanifest", "icon.svg"]);
+const WEB_FILES = new Set(["index.html", "styles.css", "app.js", "pc.js", "sw.js", "manifest.webmanifest", "icon.svg"]);
 // Si la app está alojada en otro sitio (p. ej. Vercel), pon aquí su dirección. Varias, separadas por comas.
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "").split(",").map((o) => o.trim().replace(/\/$/, "")).filter(Boolean);
 
@@ -172,6 +177,7 @@ function diskPct() {
   } catch { return 0; }
 }
 
+const caps = () => ({ platform: PLAT, exec: ALLOW_EXEC, dryRun: DRY_RUN, volumeRead: PLAT !== "win32", media: PLAT !== "darwin" });
 const stats = () => ({ cpu: cpuPct, ram: ramPct(), temp: tempC(), disk: diskPct(), uptime: Math.round(os.uptime()) });
 
 /* ---------- acciones y escenas ---------- */
@@ -185,6 +191,8 @@ async function runAction(id) {
 }
 
 async function runScene(id) {
+  const v2 = await runSceneV2(id);
+  if (v2) return v2;
   const steps = has(conf.scenes, id) ? conf.scenes[id] : null;
   if (!Array.isArray(steps) || !steps.length)
     return { ok: false, message: "La escena «" + id + "» no está configurada en actions.json", actions: [] };
@@ -197,6 +205,358 @@ async function runScene(id) {
     actions.push({ label: s.label, detail: r.ok ? s.detail : r.err, status: r.ok ? "ok" : "error" });
   }
   return { ok: true, message: "Escena «" + id + "» activada", actions };
+}
+
+/* ==========================================================================
+   v2 · control del PC desde el móvil
+   Reglas: el móvil nunca manda comandos sueltos (salvo la terminal avanzada).
+   Manda ids y valores; el servidor decide qué se ejecuta.
+   ========================================================================== */
+
+// Ejecuta un programa SIN shell (los argumentos no pueden inyectar nada). Con DRY_RUN solo lo registra.
+function proc(cmd, args, opts) {
+  opts = opts || {};
+  if (DRY_RUN && !opts.real) { audit("DRY", cmd + " " + args.join(" ")); return Promise.resolve({ ok: true, out: opts.dryOut || "", err: "", dry: true }); }
+  return new Promise((resolve) => {
+    let child;
+    try {
+      child = require("child_process").execFile(cmd, args, { timeout: opts.timeout || 15000, maxBuffer: 20 * 1024 * 1024, windowsHide: true, encoding: opts.binary ? "buffer" : "utf8" },
+        (err, stdout, stderr) => resolve({ ok: !err, out: opts.binary ? stdout : String(stdout || "").trimEnd(), err: String(stderr || "").trimEnd() || (err ? err.message : "") }));
+    } catch (e) { return resolve({ ok: false, out: "", err: e.message }); }
+    if (opts.input != null && child.stdin) { child.stdin.on("error", () => {}); child.stdin.end(opts.input); }
+  });
+}
+const ps = (script, opts) => proc("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], opts);
+const which = async (bin) => (await proc(PLAT === "win32" ? "where" : "which", [bin], { dryOut: bin })).ok;
+
+/* ---- almacén: escenas, sitios, apps fijadas y ajustes ---- */
+const ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
+const STEP_TYPES = ["open_url", "open_app", "volume", "mute", "media", "wait", "command"];
+const SAFE_ACTIONS = ["lock", "mute"];
+const DEFAULT_CONFIG = {
+  version: 2,
+  scenes: [
+    { id: "trabajo", name: "Trabajo", icon: "💼", steps: [{ type: "open_url", url: "https://calendar.google.com" }, { type: "volume", level: 20 }] },
+    { id: "cine", name: "Cine", icon: "🎬", steps: [{ type: "volume", level: 60 }, { type: "open_url", url: "https://www.youtube.com" }] },
+    { id: "foco", name: "Foco", icon: "🎯", steps: [{ type: "mute" }] },
+  ],
+  sites: [
+    { id: "youtube", name: "YouTube", icon: "▶️", url: "https://www.youtube.com" },
+    { id: "gmail", name: "Gmail", icon: "✉️", url: "https://mail.google.com" },
+    { id: "github", name: "GitHub", icon: "🐙", url: "https://github.com" },
+    { id: "calendar", name: "Calendario", icon: "📅", url: "https://calendar.google.com" },
+  ],
+  pins: [],   // ids de apps fijadas en el panel
+  prefs: { accent: "#38d6ff", orb: "plasma", voice: true, rate: 1, lang: "es-ES", haptics: true },
+};
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const str = (v, max) => String(v == null ? "" : v).trim().slice(0, max);
+const bad = (m) => Object.assign(new Error(m), { status: 400 });
+
+function isHttpUrl(u) {
+  try { const x = new URL(u); return (x.protocol === "https:" || x.protocol === "http:") && !!x.hostname; } catch { return false; }
+}
+
+function cleanStep(s, i) {
+  if (!s || typeof s !== "object" || !STEP_TYPES.includes(s.type)) throw bad("Paso " + (i + 1) + ": tipo no válido");
+  switch (s.type) {
+    case "open_url":
+      if (!isHttpUrl(s.url) || String(s.url).length > 500) throw bad("Paso " + (i + 1) + ": la dirección debe empezar por http:// o https://");
+      return { type: "open_url", url: new URL(s.url).href };
+    case "open_app": {
+      const id = str(s.app, 40);
+      if (!id) throw bad("Paso " + (i + 1) + ": falta la app");
+      return { type: "open_app", app: id, name: str(s.name, 60) };
+    }
+    case "volume": {
+      const n = Number(s.level);
+      if (!Number.isFinite(n) || n < 0 || n > 100) throw bad("Paso " + (i + 1) + ": volumen entre 0 y 100");
+      return { type: "volume", level: Math.round(n) };
+    }
+    case "mute": return { type: "mute" };
+    case "media":
+      if (!["playpause", "next", "prev", "stop"].includes(s.key)) throw bad("Paso " + (i + 1) + ": tecla multimedia no válida");
+      return { type: "media", key: s.key };
+    case "wait": {
+      const n = Number(s.ms);
+      if (!Number.isFinite(n) || n < 0 || n > 10000) throw bad("Paso " + (i + 1) + ": espera entre 0 y 10000 ms");
+      return { type: "wait", ms: Math.round(n) };
+    }
+    case "command":
+      if (!ALLOW_EXEC) throw bad("Paso " + (i + 1) + ": los comandos propios necesitan ALLOW_EXEC=1 en el servidor");
+      if (!str(s.cmd, 500)) throw bad("Paso " + (i + 1) + ": comando vacío");
+      return { type: "command", cmd: str(s.cmd, 500) };
+  }
+}
+
+function cleanConfig(input) {
+  if (!input || typeof input !== "object") throw bad("Configuración no válida");
+  const out = { version: 2, scenes: [], sites: [], pins: [], prefs: clone(DEFAULT_CONFIG.prefs) };
+  const seen = new Set();
+  const uid = (id, what) => {
+    if (!ID_RE.test(id)) throw bad(what + ": identificador no válido («" + id + "»)");
+    if (seen.has(what + id)) throw bad(what + ": identificador repetido («" + id + "»)");
+    seen.add(what + id);
+    return id;
+  };
+  if (!Array.isArray(input.scenes) || input.scenes.length > 40) throw bad("Máximo 40 escenas");
+  for (const sc of input.scenes) {
+    if (!Array.isArray(sc.steps) || sc.steps.length > 20) throw bad("Cada escena admite hasta 20 pasos");
+    out.scenes.push({ id: uid(str(sc.id, 40), "Escena"), name: str(sc.name, 40) || "Escena", icon: str(sc.icon, 8) || "✨", steps: sc.steps.map(cleanStep) });
+  }
+  const sites = Array.isArray(input.sites) ? input.sites : [];
+  if (sites.length > 80) throw bad("Máximo 80 sitios");
+  for (const st of sites) {
+    if (!isHttpUrl(st.url) || String(st.url).length > 500) throw bad("Sitio «" + str(st.name, 30) + "»: dirección no válida (http:// o https://)");
+    out.sites.push({ id: uid(str(st.id, 40), "Sitio"), name: str(st.name, 40) || new URL(st.url).hostname, icon: str(st.icon, 8) || "🌐", url: new URL(st.url).href });
+  }
+  const pins = Array.isArray(input.pins) ? input.pins : [];
+  if (pins.length > 60) throw bad("Máximo 60 apps fijadas");
+  out.pins = pins.map((p) => ({ id: str(p && p.id, 40), name: str(p && p.name, 60) })).filter((p) => p.id);
+  const p = input.prefs && typeof input.prefs === "object" ? input.prefs : {};
+  const d = out.prefs;
+  if (/^#[0-9a-fA-F]{6}$/.test(p.accent)) d.accent = p.accent.toLowerCase();
+  if (["plasma", "anillos", "cristal"].includes(p.orb)) d.orb = p.orb;
+  if (typeof p.voice === "boolean") d.voice = p.voice;
+  if (typeof p.haptics === "boolean") d.haptics = p.haptics;
+  if (Number.isFinite(Number(p.rate))) d.rate = Math.min(1.6, Math.max(0.6, Number(p.rate)));
+  if (/^[a-z]{2}(-[A-Z]{2})?$/.test(p.lang)) d.lang = p.lang;
+  return out;
+}
+
+const CONFIG_FILE = () => path.join(DATA_DIR, "config.json");
+let config;
+function loadConfig() {
+  try { config = cleanConfig(JSON.parse(fs.readFileSync(CONFIG_FILE(), "utf8"))); }
+  catch (e) {
+    if (e.code !== "ENOENT") console.error("data/config.json no es válido, se usan los valores por defecto:", e.message);
+    config = clone(DEFAULT_CONFIG);
+  }
+}
+function saveConfig(next) {
+  config = next;
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  const tmp = CONFIG_FILE() + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(config, null, 2));
+  fs.renameSync(tmp, CONFIG_FILE());   // escritura atómica: nunca queda a medias
+}
+loadConfig();
+
+/* ---- apps instaladas ---- */
+let appCache = { at: 0, list: [], map: new Map() };
+const appId = (name, key) => crypto.createHash("sha1").update(name + "|" + key).digest("hex").slice(0, 10);
+
+function desktopEntries() {
+  const dirs = ["/usr/share/applications", "/usr/local/share/applications", path.join(process.env.HOME || os.homedir(), ".local/share/applications"), "/var/lib/flatpak/exports/share/applications", "/var/lib/snapd/desktop/applications"];
+  const out = [];
+  for (const dir of dirs) {
+    let files = [];
+    try { files = fs.readdirSync(dir); } catch { continue; }
+    for (const f of files) {
+      if (!f.endsWith(".desktop")) continue;
+      let txt;
+      try { txt = fs.readFileSync(path.join(dir, f), "utf8"); } catch { continue; }
+      const sec = txt.split(/\n\[/)[0];                    // solo [Desktop Entry]
+      const g = (k) => { const m = sec.match(new RegExp("^" + k + "=(.*)$", "m")); return m ? m[1].trim() : ""; };
+      if (g("Type") !== "Application" || g("NoDisplay") === "true" || g("Hidden") === "true" || !g("Name")) continue;
+      out.push({ name: g("Name"), key: f.replace(/\.desktop$/, "") });
+    }
+  }
+  return out;
+}
+
+async function discoverApps(force) {
+  if (!force && Date.now() - appCache.at < 5 * 60 * 1000 && appCache.list.length) return appCache.list;
+  let found = [];
+  if (PLAT === "linux") found = desktopEntries().map((e) => ({ name: e.name, key: e.key, launch: ["gtk-launch", [e.key]] }));
+  else if (PLAT === "darwin") {
+    for (const dir of ["/Applications", "/System/Applications", path.join(os.homedir(), "Applications")]) {
+      try { for (const f of fs.readdirSync(dir)) if (f.endsWith(".app")) found.push({ name: f.slice(0, -4), key: f, launch: ["open", ["-a", path.join(dir, f)]] }); } catch { /* carpeta ausente */ }
+    }
+  } else if (PLAT === "win32") {
+    const r = await ps("Get-StartApps | Sort-Object Name | ConvertTo-Json -Compress", { timeout: 30000 });
+    try {
+      let j = JSON.parse(r.out || "[]");
+      if (!Array.isArray(j)) j = [j];
+      found = j.filter((a) => a && a.Name && a.AppID).map((a) => ({ name: String(a.Name), key: String(a.AppID), launch: ["explorer.exe", ["shell:AppsFolder\\" + a.AppID]] }));
+    } catch { /* sin lista */ }
+  }
+  const map = new Map();
+  for (const a of found) {
+    const id = appId(a.name, a.key);
+    if (!map.has(id)) map.set(id, { id, name: a.name, launch: a.launch });
+  }
+  const list = [...map.values()].map((a) => ({ id: a.id, name: a.name })).sort((a, b) => a.name.localeCompare(b.name, "es"));
+  appCache = { at: Date.now(), list, map };
+  return list;
+}
+
+async function openApp(id) {
+  await discoverApps(false);
+  const a = appCache.map.get(id);
+  if (!a) return { ok: false, message: "Esa app ya no está en la lista. Recarga las apps." };
+  audit("OPEN_APP", a.name);
+  const r = await proc(a.launch[0], a.launch[1], { timeout: 10000 });
+  return r.ok ? { ok: true, message: "Abriendo " + a.name } : { ok: false, message: "No se pudo abrir " + a.name + (r.err ? ": " + r.err.slice(0, 120) : "") };
+}
+
+async function openUrl(u) {
+  if (!isHttpUrl(u)) return { ok: false, message: "Solo se pueden abrir direcciones http:// o https://" };
+  const href = new URL(u).href;
+  audit("OPEN_URL", href);
+  const [cmd, args] = PLAT === "win32" ? ["explorer.exe", [href]] : PLAT === "darwin" ? ["open", [href]] : ["xdg-open", [href]];
+  const r = await proc(cmd, args, { timeout: 10000 });
+  // explorer.exe devuelve código 1 aunque abra bien
+  return r.ok || (PLAT === "win32" && !r.err.includes("ENOENT")) ? { ok: true, message: "Abriendo " + new URL(href).hostname } : { ok: false, message: "No se pudo abrir la web: " + r.err.slice(0, 120) };
+}
+
+/* ---- sonido y multimedia ---- */
+async function getVolume() {
+  if (DRY_RUN) return { level: 50, muted: false };
+  if (PLAT === "linux") {
+    const v = await proc("pactl", ["get-sink-volume", "@DEFAULT_SINK@"]);
+    const m = await proc("pactl", ["get-sink-mute", "@DEFAULT_SINK@"]);
+    const lv = (v.out.match(/(\d+)%/) || [])[1];
+    return { level: lv == null ? null : Number(lv), muted: /yes|sí/i.test(m.out) };
+  }
+  if (PLAT === "darwin") {
+    const r = await proc("osascript", ["-e", "output volume of (get volume settings) & \",\" & output muted of (get volume settings)"]);
+    const [l, m] = r.out.split(",");
+    return { level: Number(l) || 0, muted: /true/.test(m || "") };
+  }
+  return { level: null, muted: null };   // Windows no permite leerlo sin programas extra
+}
+
+async function setVolume(level) {
+  level = Math.min(100, Math.max(0, Math.round(level)));
+  audit("VOLUME", String(level));
+  if (PLAT === "linux") return proc("pactl", ["set-sink-volume", "@DEFAULT_SINK@", level + "%"]);
+  if (PLAT === "darwin") return proc("osascript", ["-e", "set volume output volume " + level]);
+  // Windows: las teclas de volumen suben/bajan de 2 en 2. Bajamos al mínimo y subimos.
+  return ps("$s=New-Object -ComObject WScript.Shell; 1..50|%{$s.SendKeys([char]174)}; 1.." + Math.round(level / 2) + "|%{$s.SendKeys([char]175)}");
+}
+
+async function stepVolume(delta) {
+  const cur = await getVolume();
+  if (cur.level == null) {
+    audit("VOLUME", "paso " + delta);
+    return ps("$s=New-Object -ComObject WScript.Shell; 1.." + Math.round(Math.abs(delta) / 2) + "|%{$s.SendKeys([char]" + (delta > 0 ? 175 : 174) + ")}");
+  }
+  return setVolume(cur.level + delta);
+}
+
+async function toggleMute() {
+  audit("MUTE", "toggle");
+  if (PLAT === "linux") return proc("pactl", ["set-sink-mute", "@DEFAULT_SINK@", "toggle"]);
+  if (PLAT === "darwin") { const c = await getVolume(); return proc("osascript", ["-e", "set volume output muted " + (c.muted ? "false" : "true")]); }
+  return ps("(New-Object -ComObject WScript.Shell).SendKeys([char]173)");
+}
+
+const MEDIA = { playpause: [179, "play-pause"], next: [176, "next"], prev: [177, "previous"], stop: [178, "stop"] };
+async function mediaKey(key) {
+  if (!has(MEDIA, key)) return { ok: false, err: "Tecla desconocida" };
+  audit("MEDIA", key);
+  if (PLAT === "win32") return ps("(New-Object -ComObject WScript.Shell).SendKeys([char]" + MEDIA[key][0] + ")");
+  if (PLAT === "linux") return proc("playerctl", [MEDIA[key][1]]);
+  return { ok: false, err: "Los controles multimedia no están disponibles en este sistema" };
+}
+
+/* ---- portapapeles y captura ---- */
+async function clipGet() {
+  if (PLAT === "win32") return ps("Get-Clipboard -Raw");
+  if (PLAT === "darwin") return proc("pbpaste", []);
+  const wl = await which("wl-paste");
+  return wl ? proc("wl-paste", ["--no-newline"]) : proc("xclip", ["-selection", "clipboard", "-o"]);
+}
+async function clipSet(text) {
+  audit("CLIP_SET", text.length + " caracteres");
+  if (PLAT === "win32") return ps("$t=[Console]::In.ReadToEnd(); Set-Clipboard -Value $t", { input: text });
+  if (PLAT === "darwin") return proc("pbcopy", [], { input: text });
+  const wl = await which("wl-copy");
+  return wl ? proc("wl-copy", [], { input: text }) : proc("xclip", ["-selection", "clipboard"], { input: text });
+}
+
+const PNG_1PX = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+async function screenshot() {
+  audit("SCREENSHOT", "");
+  if (DRY_RUN) return { ok: true, png: PNG_1PX };
+  const file = path.join(os.tmpdir(), "jarvis-" + crypto.randomBytes(6).toString("hex") + ".png");
+  let r;
+  if (PLAT === "win32") {
+    r = await ps("Add-Type -AssemblyName System.Windows.Forms,System.Drawing; $b=[System.Windows.Forms.SystemInformation]::VirtualScreen; $bmp=New-Object System.Drawing.Bitmap $b.Width,$b.Height; $g=[System.Drawing.Graphics]::FromImage($bmp); $g.CopyFromScreen($b.Left,$b.Top,0,0,$bmp.Size); $bmp.Save($env:JARVIS_SHOT,[System.Drawing.Imaging.ImageFormat]::Png); $g.Dispose(); $bmp.Dispose()".replace("$env:JARVIS_SHOT", "'" + file.replace(/'/g, "''") + "'"), { timeout: 20000 });
+  } else if (PLAT === "darwin") {
+    r = await proc("screencapture", ["-x", file]);
+  } else {
+    const tools = [["grim", [file]], ["gnome-screenshot", ["-f", file]], ["spectacle", ["-b", "-n", "-o", file]], ["scrot", ["-o", file]], ["import", ["-window", "root", file]]];
+    r = { ok: false, err: "No hay ninguna herramienta de captura (instala grim, scrot o gnome-screenshot)" };
+    for (const [bin, args] of tools) { if (await which(bin)) { r = await proc(bin, args, { timeout: 20000 }); if (r.ok) break; } }
+  }
+  try {
+    const png = fs.readFileSync(file);
+    fs.unlink(file, () => {});
+    return { ok: true, png };
+  } catch {
+    return { ok: false, err: (r && r.err) || "No se pudo hacer la captura (¿hay una sesión de escritorio activa?)" };
+  }
+}
+
+/* ---- procesos ---- */
+async function topProcesses() {
+  let rows = [];
+  if (PLAT === "win32") {
+    const r = await ps("Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 14 Id,ProcessName,@{n='mem';e={[math]::Round($_.WorkingSet64/1MB)}} | ConvertTo-Json -Compress", { timeout: 20000, real: true });
+    try { let j = JSON.parse(r.out || "[]"); if (!Array.isArray(j)) j = [j]; rows = j.map((p) => ({ pid: p.Id, name: p.ProcessName, cpu: null, mem: p.mem })); } catch { /* vacío */ }
+  } else {
+    const args = PLAT === "darwin" ? ["-Aceo", "pid,pcpu,rss,comm", "-r"] : ["-eo", "pid,pcpu,rss,comm", "--sort=-pcpu"];
+    const r = await proc("ps", args, { real: true });
+    rows = r.out.split("\n").slice(1, 15).map((l) => {
+      const m = l.trim().match(/^(\d+)\s+([\d.,]+)\s+(\d+)\s+(.+)$/);
+      return m ? { pid: Number(m[1]), name: m[4], cpu: Number(m[2].replace(",", ".")), mem: Math.round(Number(m[3]) / 1024) } : null;
+    }).filter(Boolean);
+  }
+  return rows.filter((p) => p.pid !== process.pid);
+}
+
+async function killProcess(pid) {
+  if (!ALLOW_EXEC) return { ok: false, message: "Cerrar procesos necesita ALLOW_EXEC=1 en el servidor." };
+  if (!Number.isInteger(pid) || pid <= 4 || pid === process.pid || pid === process.ppid) return { ok: false, message: "Ese proceso está protegido." };
+  const known = (await topProcesses()).some((p) => p.pid === pid);
+  if (!known) return { ok: false, message: "Ese proceso ya no está entre los principales. Actualiza la lista." };
+  audit("KILL", String(pid));
+  if (DRY_RUN) return { ok: true, message: "Proceso " + pid + " cerrado (simulado)" };
+  try { process.kill(pid); return { ok: true, message: "Proceso " + pid + " cerrado" }; }
+  catch (e) { return { ok: false, message: "No se pudo cerrar: " + e.message }; }
+}
+
+/* ---- escenas v2 ---- */
+async function runStep(s) {
+  switch (s.type) {
+    case "open_url": { const r = await openUrl(s.url); return { ok: r.ok, label: "Abrir " + new URL(s.url).hostname, detail: r.ok ? "" : r.message }; }
+    case "open_app": { const r = await openApp(s.app); return { ok: r.ok, label: "Abrir " + (s.name || "app"), detail: r.ok ? "" : r.message }; }
+    case "volume": { const r = await setVolume(s.level); return { ok: r.ok, label: "Volumen al " + s.level + " %", detail: r.ok ? "" : r.err }; }
+    case "mute": { const r = await toggleMute(); return { ok: r.ok, label: "Silenciar / activar sonido", detail: r.ok ? "" : r.err }; }
+    case "media": { const r = await mediaKey(s.key); return { ok: r.ok, label: "Multimedia: " + s.key, detail: r.ok ? "" : r.err }; }
+    case "wait": await new Promise((r) => setTimeout(r, DRY_RUN ? 0 : s.ms)); return { ok: true, label: "Esperar " + s.ms + " ms", detail: "" };
+    case "command": {
+      if (!ALLOW_EXEC) return { ok: false, label: "Comando propio", detail: "Necesita ALLOW_EXEC=1" };
+      audit("SCENE_CMD", s.cmd);
+      const r = DRY_RUN ? { ok: true } : await run(s.cmd);
+      return { ok: r.ok, label: "Comando: " + s.cmd.slice(0, 40), detail: r.ok ? "" : r.err };
+    }
+  }
+  return { ok: false, label: s.type, detail: "Paso desconocido" };
+}
+
+async function runSceneV2(id) {
+  const sc = config.scenes.find((x) => x.id === id);
+  if (!sc) return null;
+  audit("SCENE", sc.id);
+  const actions = [];
+  for (const s of sc.steps) {
+    const r = await runStep(s);
+    actions.push({ label: r.label, detail: r.detail, status: r.ok ? "ok" : "error" });
+  }
+  return { ok: actions.every((a) => a.status === "ok"), message: "Escena «" + sc.name + "» activada", actions };
 }
 
 /* ---------- chat ---------- */
@@ -259,6 +619,12 @@ async function chat(text) {
 
   // Escenas
   if (/\b(modo|escena|activa|pon)\b/.test(t)) {
+    for (const sc of config.scenes) {
+      if (t.includes(sc.id) || t.includes(sc.name.toLowerCase())) {
+        const r = await runSceneV2(sc.id);
+        return { reply: "Escena " + sc.name + " lista.", actions: r.actions };
+      }
+    }
     for (const id of Object.keys(conf.scenes)) {
       if (t.includes(id.toLowerCase())) {
         const r = await runScene(id);
@@ -347,7 +713,7 @@ function cors(req, res) {
   res.setHeader("Access-Control-Allow-Origin", origin);
   res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
   res.setHeader("Access-Control-Allow-Private-Network", "true");
   res.setHeader("Access-Control-Max-Age", "600");
 }
@@ -357,7 +723,29 @@ async function api(req, res, url) {
   if (req.method === "OPTIONS") { res.writeHead(204); return res.end(); }  // la comprobación previa no lleva token
   if (!authorized(req, res)) return;
   try {
-    if (req.method === "GET" && url.pathname === "/api/stats") return send(res, 200, stats());
+    if (req.method === "GET") {
+      switch (url.pathname) {
+        case "/api/stats": return send(res, 200, stats());
+        case "/api/config": return send(res, 200, Object.assign({ caps: caps() }, config));
+        case "/api/apps": return send(res, 200, { apps: await discoverApps(url.searchParams.get("refresh") === "1") });
+        case "/api/volume": return send(res, 200, await getVolume());
+        case "/api/clipboard": { const r = await clipGet(); return send(res, 200, { ok: r.ok, text: r.ok ? r.out.slice(0, 20000) : "", error: r.ok ? "" : r.err }); }
+        case "/api/processes": return send(res, 200, { processes: await topProcesses(), canKill: ALLOW_EXEC });
+        case "/api/screenshot": {
+          const r = await screenshot();
+          if (!r.ok) return send(res, 500, { error: r.err });
+          res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
+          return res.end(r.png);
+        }
+        default: return send(res, 404, { error: "No existe" });
+      }
+    }
+    if (req.method === "PUT" && url.pathname === "/api/config") {
+      const next = cleanConfig(await readBody(req));
+      saveConfig(next);
+      audit("CONFIG", next.scenes.length + " escenas, " + next.sites.length + " sitios");
+      return send(res, 200, Object.assign({ caps: caps() }, config));
+    }
     if (req.method !== "POST") return send(res, 404, { error: "No existe" });
 
     const body = await readBody(req);
@@ -370,10 +758,37 @@ async function api(req, res, url) {
       }
       case "/api/scene": {
         const r = await runScene(String(body.id || ""));
-        return send(res, 200, { ok: r.ok, message: r.message });
+        return send(res, 200, { ok: r.ok, message: r.message, actions: r.actions || [] });
       }
-      case "/api/action":
-        return send(res, 200, await runAction(String(body.id || "")));
+      case "/api/open": {
+        if (body.url) return send(res, 200, await openUrl(String(body.url)));
+        if (body.app) return send(res, 200, await openApp(String(body.app)));
+        return send(res, 400, { error: "Indica url o app" });
+      }
+      case "/api/volume": {
+        let r;
+        if (body.mute) r = await toggleMute();
+        else if (body.level != null) r = await setVolume(Number(body.level));
+        else if (body.delta != null) r = await stepVolume(Math.max(-100, Math.min(100, Number(body.delta) || 0)));
+        else return send(res, 400, { error: "Indica level, delta o mute" });
+        return send(res, 200, Object.assign({ ok: r.ok, error: r.ok ? "" : r.err }, await getVolume()));
+      }
+      case "/api/media": {
+        const r = await mediaKey(String(body.key || ""));
+        return send(res, 200, { ok: r.ok, error: r.ok ? "" : r.err });
+      }
+      case "/api/clipboard": {
+        const r = await clipSet(String(body.text == null ? "" : body.text).slice(0, 20000));
+        return send(res, 200, { ok: r.ok, error: r.ok ? "" : r.err });
+      }
+      case "/api/kill":
+        return send(res, 200, await killProcess(Number(body.pid)));
+      case "/api/action": {
+        const id = String(body.id || "");
+        // Desde el móvil solo se aceptan acciones conocidas (las del servidor o las de actions.json)
+        if (!has(conf.actions, id) && !has(DEFAULT_ACTIONS, id)) return send(res, 404, { ok: false, message: "Acción desconocida" });
+        return send(res, 200, await runAction(id));
+      }
       case "/api/exec": {
         if (!ALLOW_EXEC) return send(res, 200, { output: "", error: "La terminal está desactivada. Pon ALLOW_EXEC=1 en el .env para activarla." });
         const cmd = String(body.cmd || "").slice(0, 1000);
@@ -393,7 +808,7 @@ const MIME = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json", ".png": "image/png", ".ico": "image/x-icon",
 };
-const CSP = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'";
+const CSP = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'";
 
 function serveStatic(req, res, url) {
   if (req.method !== "GET" && req.method !== "HEAD") return send(res, 405, "Método no permitido");
@@ -425,6 +840,7 @@ http.createServer((req, res) => {
   }
 }).listen(PORT, HOST, () => {
   console.log("\nJarvis escuchando en http://" + HOST + ":" + PORT);
+  if (DRY_RUN) console.log("MODO PRUEBA: no se ejecuta nada en el PC.");
   console.log("Sistema: " + PLAT + " · terminal " + (ALLOW_EXEC ? "ACTIVADA" : "desactivada") + " · cerebro: " + (JARVIS_CHAT_URL ? JARVIS_CHAT_URL : "Ollama (" + OLLAMA_MODEL + ")"));
   if (ALLOWED_ORIGINS.length) console.log("Orígenes permitidos (CORS): " + ALLOWED_ORIGINS.join(", "));
   if (HOST === "127.0.0.1") console.log("Solo accesible desde este PC. Para el móvil: tailscale serve --bg " + PORT + "\n");

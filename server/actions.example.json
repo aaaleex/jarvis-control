@@ -1,0 +1,23 @@
+{
+  "apps": {
+    "spotify": { "win32": "start \"\" spotify:", "linux": "spotify" },
+    "discord": { "win32": "start \"\" discord:", "linux": "discord" },
+    "navegador": { "win32": "start \"\" chrome", "linux": "xdg-open https://www.google.com" },
+    "vs code": { "win32": "code", "linux": "code" },
+    "obsidian": { "win32": "start \"\" obsidian:", "linux": "obsidian" }
+  },
+  "scenes": {
+    "gaming": [
+      { "label": "Epic Games", "detail": "Epic Games Launcher", "cmd": { "win32": "start \"\" com.epicgames.launcher://" } },
+      { "label": "Discord", "detail": "Discord", "cmd": { "win32": "start \"\" discord:", "linux": "discord" } },
+      { "label": "Spotify", "detail": "Spotify", "cmd": { "win32": "start \"\" spotify:", "linux": "spotify" } }
+    ],
+    "trabajo": [
+      { "label": "VS Code", "detail": "Editor", "cmd": { "win32": "code", "linux": "code" } },
+      { "label": "Obsidian", "detail": "Notas", "cmd": { "win32": "start \"\" obsidian:", "linux": "obsidian" } }
+    ]
+  },
+  "actions": {
+    "screenshot": { "linux": "gnome-screenshot -f ~/captura.png" }
+  }
+}

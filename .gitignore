@@ -1,0 +1,6 @@
+# Secretos y datos locales: NO subir nunca
+.env
+server/.env
+server/audit.log
+server/actions.json
+node_modules/

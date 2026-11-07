@@ -48,7 +48,7 @@ y luego `sudo systemctl enable --now jarvis`. (Comprueba la ruta de node con `wh
 **Windows**: Programador de tareas > Crear tarea > desencadenador "Al iniciar sesión" > acción "Iniciar programa": `node` con argumentos `server.js` y "Iniciar en" la carpeta `server`.
 
 ## 5. Personalizarlo
-- **Tu propio Jarvis**: en `.env` pon `JARVIS_CHAT_URL=http://127.0.0.1:PUERTO/ruta`. El servidor le envía `POST {"text": "..."}` y espera `{"reply": "..."}`. Si quieres que muestre lo que ha ejecutado, puede devolver también `"actions": [{"label": "Abrir Spotify", "detail": "Pantalla 3", "status": "ok"}]`.
+- **Tu propio Jarvis** (lo normal si ya lo usas por voz en el PC): en `.env` pon `JARVIS_CHAT_URL=http://127.0.0.1:PUERTO/ruta`. El servidor le envía `POST {"text": "..."}` y espera `{"reply": "..."}`. Todo lo que dices desde el móvil llega a ese Jarvis, igual que si se lo dijeras en voz alta; solo apagar, reiniciar y suspender se interceptan para pedirte confirmación en el móvil. Con `LOCAL_INTENTS=1` también se usan las escenas y apps de `actions.json`. Si quieres que muestre lo que ha ejecutado, puede devolver también `"actions": [{"label": "Abrir Spotify", "detail": "Pantalla 3", "status": "ok"}]`.
 - **Apps, escenas y acciones**: copia `actions.example.json` como `actions.json` y edítalo. Solo se abren las apps que definas ahí. Reinicia el servidor tras cambiarlo.
 - **Terminal del móvil**: ejecuta comandos reales en el PC. Viene apagada; actívala con `ALLOW_EXEC=1` solo si te hace falta.
 - **Pantallas concretas** (Discord en la segunda pantalla): el servidor lanza las apps, pero colocar ventanas en un monitor concreto necesita una herramienta extra según tu sistema. Está pendiente.

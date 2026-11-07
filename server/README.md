@@ -1,0 +1,69 @@
+# Jarvis · servidor
+
+Un servidor pequeño (Node, sin dependencias) que corre en el PC de Jarvis. Protege todo con un token, ejecuta las órdenes en el PC y, si quieres, también sirve la app del móvil (los archivos de la carpeta de arriba).
+
+## 1. Requisitos
+- Node 18.15 o superior (`node -v`). Si no lo tienes: https://nodejs.org
+- Ollama con el modelo (`ollama pull gemma3:4b`) si quieres el cerebro por defecto.
+  Si ya tienes tu propio Jarvis con una URL, mira el paso 5.
+
+## 2. Primer arranque
+Desde esta carpeta (`server/`):
+1. Crea la configuración:
+   - Linux/Mac: `cp .env.example .env`
+   - Windows (PowerShell): `copy .env.example .env`
+2. Genera un token: `node server.js --gen-token` y pégalo en `JARVIS_TOKEN=` del `.env`.
+3. Arranca: `node server.js` → debe decir "Jarvis escuchando en http://127.0.0.1:3000".
+4. En ese mismo PC abre http://127.0.0.1:3000 : la app detecta el servidor y te pide el token.
+
+## 3. Usarlo desde el móvil (Tailscale)
+Tailscale crea una red privada entre tus dispositivos: solo tú entras, sin abrir puertos del router.
+1. Instala Tailscale en el PC y en el móvil (https://tailscale.com/download), con la MISMA cuenta.
+2. En el panel de Tailscale (login.tailscale.com > DNS) activa **HTTPS Certificates**.
+3. En el PC: `tailscale serve --bg 3000` → te da una dirección tipo `https://nombre-pc.tu-red.ts.net`.
+4. Ábrela en el móvil, pega el token en Ajustes y guarda.
+5. Instálala como app: menú del navegador > "Añadir a pantalla de inicio". (Hace falta https para instalarla y para el micrófono.)
+
+### Si la app está alojada en Vercel
+En el `.env` pon `ALLOWED_ORIGIN=https://tu-app.vercel.app` (dirección exacta, sin barra final; varias separadas por comas) y reinicia el servidor. En la app de Vercel: Ajustes > desactivar "Modo demo" > en "Dirección del servidor" la `https://…ts.net` y el token. El móvil debe tener Tailscale encendido. Usa el dominio de producción de Vercel: cada vista previa tiene una dirección distinta y habría que añadirla también.
+
+## 4. Que arranque solo con el PC
+**Linux (systemd)**: crea `/etc/systemd/system/jarvis.service`
+
+    [Unit]
+    Description=Jarvis server
+    After=network.target
+
+    [Service]
+    WorkingDirectory=/RUTA/A/jarvis-control/server
+    ExecStart=/usr/bin/node server.js
+    Restart=always
+    User=TU_USUARIO
+
+    [Install]
+    WantedBy=multi-user.target
+
+y luego `sudo systemctl enable --now jarvis`. (Comprueba la ruta de node con `which node`.)
+
+**Windows**: Programador de tareas > Crear tarea > desencadenador "Al iniciar sesión" > acción "Iniciar programa": `node` con argumentos `server.js` y "Iniciar en" la carpeta `server`.
+
+## 5. Personalizarlo
+- **Tu propio Jarvis**: en `.env` pon `JARVIS_CHAT_URL=http://127.0.0.1:PUERTO/ruta`. El servidor le envía `POST {"text": "..."}` y espera `{"reply": "..."}`. Si quieres que muestre lo que ha ejecutado, puede devolver también `"actions": [{"label": "Abrir Spotify", "detail": "Pantalla 3", "status": "ok"}]`.
+- **Apps, escenas y acciones**: copia `actions.example.json` como `actions.json` y edítalo. Solo se abren las apps que definas ahí. Reinicia el servidor tras cambiarlo.
+- **Terminal del móvil**: ejecuta comandos reales en el PC. Viene apagada; actívala con `ALLOW_EXEC=1` solo si te hace falta.
+- **Pantallas concretas** (Discord en la segunda pantalla): el servidor lanza las apps, pero colocar ventanas en un monitor concreto necesita una herramienta extra según tu sistema. Está pendiente.
+
+## 6. Seguridad (esto controla tu PC)
+- Deja `HOST=127.0.0.1` y usa `tailscale serve`: así el servidor no es visible en tu red local.
+- El token es la llave. No lo compartas ni lo subas al repositorio (`.env` está en `.gitignore`).
+- Apagar, reiniciar y suspender siempre piden confirmación en el móvil, también por voz.
+- 8 intentos fallidos bloquean la IP un minuto. Todo lo que se ejecuta queda en `audit.log`.
+- El servidor solo sirve una lista cerrada de archivos de la app, nunca el resto de carpetas.
+- Si el token se filtra: genera otro, cámbialo en `.env`, reinicia el servidor y ponlo de nuevo en el móvil.
+
+## 7. Problemas típicos
+- "No puedo conectar con Ollama": arranca Ollama (`ollama serve`) o revisa `OLLAMA_URL` y `OLLAMA_MODEL`.
+- "Token incorrecto": el del móvil no coincide con el del `.env` (cuidado con espacios al pegar).
+- Error de red desde Vercel: revisa que `ALLOWED_ORIGIN` sea exactamente la dirección de la app y que el móvil tenga Tailscale encendido.
+- La temperatura sale "–": en Windows no hay forma fiable sin programas extra; en Linux se lee sola.
+- El micrófono no funciona: hace falta https y permiso del navegador. Si falla, el orbe abre la caja de texto.

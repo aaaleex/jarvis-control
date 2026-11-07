@@ -51,7 +51,11 @@ async function call(path, method = "GET", body) {
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + cfg.token },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error("El servidor respondió " + res.status);
+  if (!res.ok) {
+    let msg = "";
+    try { msg = (await res.json()).error; } catch { /* sin detalle */ }
+    throw new Error(msg || "El servidor respondió " + res.status);
+  }
   return res.json();
 }
 
@@ -725,9 +729,10 @@ function formatUptime(sec) {
 const GAUGE_C = 2 * Math.PI * 32;
 function paintGauge(key, value, unit, max) {
   const g = $('.gauge[data-key="' + key + '"]');
-  const pct = Math.min(1, value / max);
+  const known = typeof value === "number";      // la temperatura puede no estar disponible (Windows)
+  const pct = known ? Math.min(1, value / max) : 0;
   g.querySelector(".g-arc").style.strokeDashoffset = GAUGE_C * (1 - pct);
-  g.querySelector(".g-val").textContent = value + unit;
+  g.querySelector(".g-val").textContent = known ? value + unit : "–";
   g.classList.toggle("hot", pct >= 0.85);
   g.classList.toggle("warm", pct >= 0.65 && pct < 0.85);
 }
@@ -742,7 +747,7 @@ async function refreshStats() {
     $("#uptime").textContent = "TIEMPO ENCENDIDO · " + formatUptime(s.uptime);
     $("#teleCpu").textContent = s.cpu + " %";
     $("#teleRam").textContent = s.ram + " %";
-    $("#teleTemp").textContent = s.temp + " °";
+    $("#teleTemp").textContent = typeof s.temp === "number" ? s.temp + " °" : "–";
     setConn(cfg.demo ? "demo" : "ok");
   } catch {
     setConn("off");
@@ -884,6 +889,21 @@ $("#saveSettings").addEventListener("click", () => {
 })();
 
 setPhase("idle");
+
+// Primera vez abierta desde el servidor de tu PC: lo detecta y te pide el token.
+(async () => {
+  if (readJSON(CFG_KEY, null)) return;
+  try {
+    const r = await fetch("/api/stats");
+    if (r.status === 401) {
+      cfg.demo = false;
+      writeJSON(CFG_KEY, cfg);
+      setConn("off");
+      $("#openSettings").click();
+      toast("Servidor detectado. Pega tu token.");
+    }
+  } catch { /* abierta fuera del servidor: se queda en modo demo */ }
+})();
 
 if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
   navigator.serviceWorker.register("sw.js").catch(() => { /* sin service worker no pasa nada */ });

@@ -1,0 +1,13 @@
+{
+  "name": "jarvis-server",
+  "version": "1.0.0",
+  "description": "Servidor de Jarvis: sirve la app del móvil y ejecuta las órdenes en el PC",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "token": "node server.js --gen-token"
+  },
+  "engines": { "node": ">=18.15" },
+  "license": "UNLICENSED",
+  "private": true
+}

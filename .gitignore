@@ -11,6 +11,7 @@ app/config.js
 # ============ Dependencias ============
 node_modules/
 .venv/
+.venv-*/
 venv/
 env/
 __pycache__/

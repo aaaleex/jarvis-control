@@ -438,13 +438,15 @@ class _OrdenMovil:
         limite = time.time() + segundos
         while time.time() < limite and not self.hecho.is_set() and not self.pregunta:
             time.sleep(0.05)
+        confirmar = False
         if self.hecho.is_set():
             texto = self.respuesta or " ".join(self.errores) or "Hecho."
         elif self.pregunta:
             texto = f"{self.pregunta} Responde «sí» o «no»."
+            confirmar = True  # el puente de Supabase deja la fila en «confirmar» y la app enseña Sí/No
         else:
             texto = "Sigo con ello, tarda más de lo normal."
-        return {"reply": texto, "actions": self.acciones}
+        return {"reply": texto, "actions": self.acciones, "confirmar": confirmar}
 
 
 _orden_movil = None

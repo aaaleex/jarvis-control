@@ -1,0 +1,3 @@
+# Solo para puente_supabase.py, en su propio entorno (.venv-puente)
+realtime==2.34.1
+httpx>=0.28

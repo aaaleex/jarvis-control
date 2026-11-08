@@ -1,20 +1,30 @@
 # Jarvis · mando móvil
 
-App web (PWA) para hablar con Jarvis y controlar el PC desde el móvil: un orbe que se toca para hablar, un panel de control y una terminal. Sin servidor funciona en modo demo (datos simulados).
+App web (PWA) para hablar con Jarvis y controlar el PC desde el móvil, y el propio Jarvis del PC, en un solo repo.
 
 ```
-móvil (app) ──https · Tailscale──▶ servidor (server/, en el PC de Jarvis) ──▶ Ollama / tu Jarvis / comandos del sistema
+móvil (app/) ──Supabase (tabla comandos + Realtime)──▶ PC (pc/puente_supabase.py) ──▶ Jarvis (misma lógica que la voz)
+móvil (app/) ──https · Tailscale (opcional)──────────▶ server/ (panel del PC: volumen, pantalla, procesos…)
 ```
 
 ## Qué hay en el repo
-- `index.html`, `styles.css`, `app.js`, `sw.js`, `manifest.webmanifest`, `icon.svg` · la app. `app.js` lleva arriba el contrato con el servidor.
-- `server/` · servidor Node sin dependencias que corre en el PC. Instalación paso a paso en [`server/README.md`](server/README.md).
+- `app/` · la PWA (en Vercel: **Root Directory = `app`**). Login y órdenes por Supabase en `app/nube.js`.
+- `pc/` · el Jarvis de Windows y el puente con Supabase. Arranque: `pc\start.bat`.
+- `supabase/migrations/` · la tabla `comandos` con RLS y Realtime.
+- `server/` · servidor Node opcional para el panel del PC por Tailscale ([`server/README.md`](server/README.md)).
+- [`CLAUDE.md`](CLAUDE.md) (arquitectura y cómo arrancar cada parte) y [`API.md`](API.md) (formato de los mensajes).
 
-## Dos formas de usarla
+## Por Supabase (lo principal)
+En la app: inicia sesión con tu correo y contraseña. Lo que digas o escribas va a la tabla `comandos`, tu PC lo
+ejecuta y la respuesta aparece en directo. Funciona sin Tailscale y aunque el PC esté apagado un rato
+(las órdenes esperan hasta 1 hora).
+
+## Servidor por Tailscale (opcional)
 1. **Servida por el propio servidor** (la más simple): abres el link de Tailscale del PC y la app detecta el servidor sola.
 2. **Alojada en Vercel** (u otro sitio): en `server/.env` pon `ALLOWED_ORIGIN=https://tu-app.vercel.app`. Luego, en la app: Ajustes > desactivar "Modo demo" > pegar la dirección del servidor (`https://…ts.net`) y el token. El móvil necesita Tailscale encendido.
 
 ## Probar solo la interfaz
+    cd app
     python -m http.server 8080
 y abre http://localhost:8080 (modo demo).
 

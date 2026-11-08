@@ -456,3 +456,10 @@ select:focus { border-color: var(--accent); }
 .sheet-actions .btn { padding: 0 6px; letter-spacing: 0.08em; }
 .step small { font: 12px var(--font-mono); color: var(--muted); letter-spacing: 0; }
 .step .what + div { min-width: 0; }
+
+/* ---------- Supabase: login e historial de comandos ---------- */
+.login-error { min-height: 1.2em; margin: 0; color: #ff6b7a; font-size: 13px; }
+.log-estado { font-weight: 600; letter-spacing: 0.08em; }
+.log-estado.hecho { color: var(--ok); }
+.log-estado.error { color: #ff6b7a; }
+.log-estado.pendiente, .log-estado.ejecutando, .log-estado.confirmar { color: var(--accent); }

@@ -332,6 +332,11 @@
     <form method="dialog" class="sheet" id="settingsForm">
       <h3>Ajustes</h3>
 
+      <div class="row" id="accountRow" hidden>
+        <span>Cuenta (Supabase)<small id="accountText">Sin sesión</small></span>
+        <button type="button" class="btn" id="accountBtn">Iniciar sesión</button>
+      </div>
+
       <label class="row">
         <span>Modo demo<small>Respuestas simuladas, sin servidor</small></span>
         <input type="checkbox" id="setDemo" class="switch">
@@ -386,7 +391,28 @@
     </form>
   </dialog>
 
+  <!-- Iniciar sesión (Supabase) -->
+  <dialog id="loginDialog">
+    <form class="sheet" id="loginForm">
+      <h3>Iniciar sesión</h3>
+      <label class="field"><span>Correo</span>
+        <input type="email" id="loginEmail" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+      </label>
+      <label class="field"><span>Contraseña</span>
+        <input type="password" id="loginPass" autocomplete="current-password" required>
+      </label>
+      <p class="login-error" id="loginError" role="alert"></p>
+      <div class="sheet-actions">
+        <button type="button" class="btn" id="loginCancel">Ahora no</button>
+        <button type="submit" class="btn btn-primary" id="loginBtn">Entrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="vendor/supabase.js"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
+  <script src="nube.js"></script>
   <script src="pc.js"></script>
 </body>
 </html>

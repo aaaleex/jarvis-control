@@ -62,6 +62,7 @@ async function call(path, method = "GET", body) {
 
 const api = {
   async chat(text) {
+    if (window.nube && nube.activa()) return nube.chat(text);   // con sesión de Supabase: por el buzón (nube.js)
     if (!cfg.demo) return call("/api/chat", "POST", { text });
     await sleep(800 + Math.random() * 500);
     return demoUnderstand(text);
@@ -698,6 +699,10 @@ const historyDialog = $("#historyDialog");
 $("#dockHistory").addEventListener("click", () => {
   const list = $("#historyList");
   list.innerHTML = "";
+  if (window.nube && nube.activa()) {   // con Supabase: historial de comandos con su estado
+    nube.pintarHistorial(list);
+    return historyDialog.showModal();
+  }
   if (!history.length) {
     list.innerHTML = '<div class="log-empty">Todavía no hay conversación</div>';
   } else {
@@ -751,6 +756,8 @@ function paintGauge(key, value, unit, max) {
 }
 
 async function refreshStats() {
+  // Solo con Supabase (sin servidor por Tailscale): el indicador muestra si el buzón está conectado
+  if (window.nube && nube.activa() && (cfg.demo || !cfg.url)) return setConn(nube.conectada() ? "ok" : "off");
   try {
     const s = await api.stats();
     paintGauge("cpu", s.cpu, " %", 100);

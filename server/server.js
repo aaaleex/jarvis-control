@@ -51,7 +51,8 @@ const DATA_DIR = process.env.JARVIS_DATA_DIR ? path.resolve(process.env.JARVIS_D
 const PLAT = process.platform; // "win32" | "linux" | "darwin"
 // La app (index.html, app.js…) está en ../app. Solo se sirven estos archivos.
 const WEB_DIR = process.env.WEB_DIR ? path.resolve(process.env.WEB_DIR) : path.join(__dirname, "..", "app");
-const WEB_FILES = new Set(["index.html", "styles.css", "app.js", "pc.js", "sw.js", "manifest.webmanifest", "icon.svg"]);
+const WEB_FILES = new Set(["index.html", "styles.css", "app.js", "nube.js", "pc.js", "sw.js", "config.js",
+  "vendor/supabase.js", "manifest.webmanifest", "icon.svg"]);
 // Si la app está alojada en otro sitio (p. ej. Vercel), pon aquí su dirección. Varias, separadas por comas.
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "").split(",").map((o) => o.trim().replace(/\/$/, "")).filter(Boolean);
 
@@ -808,7 +809,7 @@ const MIME = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json", ".png": "image/png", ".ico": "image/x-icon",
 };
-const CSP = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'";
+const CSP = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; base-uri 'none'; frame-ancestors 'none'";
 
 function serveStatic(req, res, url) {
   if (req.method !== "GET" && req.method !== "HEAD") return send(res, 405, "Método no permitido");

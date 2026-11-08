@@ -1,7 +1,31 @@
-# Secretos y datos locales: NO subir nunca
+# ============ Secretos: NO subir nunca ============
 .env
-server/.env
+*.env
+!.env.example
 server/audit.log
 server/actions.json
-node_modules/
 server/data/
+supabase/.temp/
+app/config.js
+
+# ============ Dependencias ============
+node_modules/
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# ============ Jarvis del PC: pesado o privado ============
+pc/modelos/
+pc/datos/
+pc/capturas/
+pc/_antiguo/
+pc/config.yaml
+pc/config.backup-*.yaml
+pc/*.log
+
+# ============ Sistema ============
+.DS_Store
+Thumbs.db
+.vercel/

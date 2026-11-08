@@ -49,8 +49,8 @@ const JARVIS_CHAT_TOKEN = process.env.JARVIS_CHAT_TOKEN || "";
 const DRY_RUN = process.env.JARVIS_DRY_RUN === "1";   // pruebas: registra lo que haría, sin tocar el PC
 const DATA_DIR = process.env.JARVIS_DATA_DIR ? path.resolve(process.env.JARVIS_DATA_DIR) : path.join(__dirname, "data");
 const PLAT = process.platform; // "win32" | "linux" | "darwin"
-// La app (index.html, app.js…) está en la carpeta de arriba. Solo se sirven estos archivos.
-const WEB_DIR = process.env.WEB_DIR ? path.resolve(process.env.WEB_DIR) : path.join(__dirname, "..");
+// La app (index.html, app.js…) está en ../app. Solo se sirven estos archivos.
+const WEB_DIR = process.env.WEB_DIR ? path.resolve(process.env.WEB_DIR) : path.join(__dirname, "..", "app");
 const WEB_FILES = new Set(["index.html", "styles.css", "app.js", "pc.js", "sw.js", "manifest.webmanifest", "icon.svg"]);
 // Si la app está alojada en otro sitio (p. ej. Vercel), pon aquí su dirección. Varias, separadas por comas.
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || "").split(",").map((o) => o.trim().replace(/\/$/, "")).filter(Boolean);

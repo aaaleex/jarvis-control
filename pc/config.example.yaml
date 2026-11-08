@@ -1,0 +1,181 @@
+# Copia este archivo como config.yaml y ajústalo (config.yaml no se sube a git).
+# ============================================================
+#  CONFIGURACIÓN DE JARVIS
+#  Todo lo que quieras cambiar está aquí. No hace falta tocar
+#  el código. Tras modificarlo, reinicia Jarvis.
+# ============================================================
+
+usuario:
+  nombre: "TuNombre"              # Cómo te llama Jarvis
+  ciudad: "Madrid"     # Ciudad por defecto para el clima
+
+# ---------- Cerebro (modelo de IA) ----------
+cerebro:
+  proveedor: ollama           # ollama (local, gratis) | claude (API de Anthropic, de pago)
+  max_pasos_herramientas: 8   # Cuántas herramientas puede encadenar en una sola orden
+  ollama:
+    url: "http://localhost:11434"
+    modelo: "qwen3:4b-instruct"   # Responde directo, con herramientas. Más listo pero más lento: qwen3:8b
+    modelo_embeddings: "bge-m3"
+    modelo_vision: "qwen2.5vl:3b"
+    contexto: 8192
+    mantener_cargado: true    # true = respuestas instantáneas (ocupa ~4 GB de VRAM mientras Jarvis está abierto)
+  claude:
+    # OPCIÓN PREPARADA (desactivada): usar Claude para las órdenes que el camino rápido no entiende.
+    # Las órdenes simples (abrir, volumen, hora, escenas...) siguen sin ir a ningún modelo; solo lo
+    # ambiguo o conversacional iría a la API (responde en 1-3 s y sin cargar nada en tu GPU).
+    # Para activarla: pon la clave aquí (o en la variable de entorno ANTHROPIC_API_KEY)
+    # y cambia arriba  proveedor: claude
+    api_key: ""
+    modelo: "claude-haiku-5-5" # El más rápido y barato. Más listo pero más lento: claude-opus-5-5
+    esfuerzo: "low"           # low | medium | high (más alto = más lento y caro)
+
+# ---------- Camino rápido (órdenes simples sin pasar por el modelo) ----------
+camino_rapido:
+  activado: true              # abrir/cerrar apps y webs, pantallas, volumen, música, hora, temporizadores,
+                              # escenas, modo juego, apuntar en el Inbox... resueltos en milisegundos
+
+# ---------- Pantallas ----------
+pantallas:
+  # Nombres propios para tus monitores (número de Windows -> nombre que dirás). También desde la interfaz.
+  # Ejemplo:  3: "la tele"
+  nombres: {}
+
+# ---------- Personalidad ----------
+personalidad: informal        # Una de las de abajo
+personalidades:
+  clasico: >
+    Elegante, sereno y eficiente, con un humor británico sutil e ingenioso,
+    como el JARVIS de las películas de Iron Man. Leal y con un punto de ironía amable.
+  informal: >
+    Cercano, desenfadado y bromista, como un colega que sabe de todo. Frases cortas.
+  serio: >
+    Profesional, directo y sin bromas. Máxima concisión.
+
+# ---------- Voz ----------
+voz:
+  activada: true
+  motor_tts: edge             # edge (voces neuronales de Microsoft, requiere internet) | piper (100% local)
+  voz_edge: "es-ES-AlvaroNeural"   # Otras: es-ES-ElviraNeural, es-ES-XimenaNeural
+  velocidad_edge: "+8%"
+  piper_modelo: "modelos/piper/es_ES-davefx-medium.onnx"
+  volumen_voz: 100            # 0-100
+  responder_texto_en_voz: true  # Si le escribes por el chat, ¿responde también en voz alta?
+  whisper_modelo: "small"     # tiny | base | small | medium (más grande = más preciso y lento)
+  whisper_dispositivo: auto   # auto | cuda | cpu
+  # hibrido  = "Jarvis, ..." en cualquier frase (Whisper) + "Hey Jarvis" instantáneo (openWakeWord)
+  # whisper  = solo detección del nombre con Whisper
+  # wakeword = solo "Hey Jarvis" (openWakeWord, gasta menos)
+  # tecla    = solo el atajo de teclado
+  modo_activacion: hibrido
+  palabra_activacion: "hey_jarvis"
+  umbral_activacion: 0.45     # 0-1. Más bajo = más sensible (y más falsos positivos)
+  microfono:                  # null = el predeterminado de Windows. O parte del nombre, p. ej. "G733"
+  silencio_fin_frase: 0.7     # Segundos de silencio para dar por terminada la frase
+
+# ---------- Seguridad ----------
+seguridad:
+  carpeta_permitida: 'C:\Users\TU_USUARIO\Documents\Jarvis'
+  pedir_confirmacion: true    # Pedir "sí/no" antes de acciones peligrosas
+
+# ---------- Obsidian ----------
+obsidian:
+  vault: 'C:\Users\TU_USUARIO\Documents\MiVault'
+  nota_inbox: "Inbox.md"
+  carpeta_notas_nuevas: ""    # "" = raíz del vault
+  # La carpeta y formato de la nota diaria se leen de la configuración de Obsidian.
+
+# ---------- Interfaz ----------
+interfaz:
+  puerto: 8765
+  ventana_propia: true        # true = ventana de app | false = abrir en el navegador
+  # A la vista solo hay un orbe 3D flotando sobre el escritorio (ventana transparente, sin barra de tareas).
+  # Ajustes, escenas, pantallas y la conversación: clic derecho en el orbe o menú del icono de la bandeja.
+  estilo_orbe: nucleo         # nucleo (esfera de energía) | anillo (anillo de partículas) | malla (esfera de líneas)
+  tamano_orbe: 900            # Lado de la ventana del orbe en píxeles (280-900)
+  subtitulos: false           # Una línea discreta bajo el orbe con lo último que dijiste / respondió
+  sombra_orbe: true           # Velo oscuro muy suave detrás del orbe (se lee mejor sobre fondos claros)
+  transparente: true          # false = el orbe sobre un fondo oscuro (si tu Windows no muestra bien la transparencia)
+  precargar: true            # Ventana creada de antemano y oculta (sin modelos): aparece al instante al llamar
+                              # a Jarvis. Gasta RAM en reposo (ver README); en modo juego se cierra sola.
+  precargar_oido: true        # Con la precarga, deja también Whisper cargado: las órdenes por voz se entienden
+                              # nada más acabar la frase (cuesta VRAM/RAM en reposo, ver README)
+  orbe_calidad: auto          # auto | alta | media | baja (orbe 3D; auto se adapta a tu GPU)
+
+# ---------- Vigilante (proceso ligero que arranca con Windows) ----------
+vigilante:
+  atajo: "ctrl+alt+j"         # Abre Jarvis y te escucha; si ya está abierto, lo muestra/oculta.
+                              # Ejemplos: "ctrl+alt+j", "ctrl+shift+space", "alt+f12". Evita combinaciones con "win".
+  inactividad_minutos: 0.1    # Minutos sin uso para cerrar Jarvis y liberar memoria (0 = nunca)
+  umbral_confianza: 0.6       # 0-1. Más alto = menos activaciones falsas, pero más «Jarvis» sin oír
+  sonido_activacion: true     # Pitido corto al oírte
+
+# ---------- Modo juego ----------
+modo_juego:
+  automatico: true            # Detecta juegos a pantalla completa y deja de escuchar (solo atajo)
+  notificar: false            # Aviso de Windows al entrar/salir solo del modo juego (el icono ya se pone ámbar)
+  procesos:                   # Juegos que siempre activan el modo juego al estar en primer plano
+  - RocketLeague.exe
+  - FortniteClient-Win64-Shipping.exe
+  - VALORANT-Win64-Shipping.exe
+  - League of Legends.exe
+  - cs2.exe
+  - Minecraft.Windows.exe
+  excluir:                    # Programas a pantalla completa que NO son juegos (vídeo, presentaciones...)
+  - msedge.exe
+  - chrome.exe
+  - firefox.exe
+  - opera.exe
+  - brave.exe
+  - vlc.exe
+  - Spotify.exe
+  - POWERPNT.EXE
+  - msedgewebview2.exe
+  - EpicGamesLauncher.exe     # el launcher no es un juego (las escenas lo abren a pantalla completa)
+  - Discord.exe
+  - steamwebhelper.exe
+
+# ---------- Aplicaciones y webs ----------
+# Nombres cortos que puedes decir -> nombre real de la app en el menú Inicio, o ruta/comando.
+apps:
+  vscode: "Visual Studio Code"
+  visual studio code: "Visual Studio Code"
+  navegador: "msedge"
+  bloc de notas: "notepad"
+  calculadora: "calc"
+  explorador: "explorer"
+  obsidian: "Obsidian"
+  spotify: "Spotify"
+
+webs:
+  youtube: "https://www.youtube.com"
+  gmail: "https://mail.google.com"
+  github: "https://github.com"
+  chatgpt: "https://chatgpt.com"
+  whatsapp: "https://web.whatsapp.com"
+  netflix: "https://www.netflix.com"
+  twitch: "https://www.twitch.tv"
+  moodle: "https://moodle.org"
+
+# ---------- Rutinas (fase 5) ----------
+# Cada paso es una herramienta con sus argumentos.
+rutinas:
+  estudio:
+  - abrir_aplicacion: {nombre: "vscode"}
+  - abrir_aplicacion: {nombre: "obsidian"}
+  - abrir_web: {destino: "https://www.youtube.com/results?search_query=lofi+study+music"}
+  - decir: {texto: "Modo estudio activado. Concéntrate, yo vigilo el fuerte."}
+  descanso:
+  - cerrar_aplicacion: {nombre: "Code"}
+  - cerrar_aplicacion: {nombre: "Obsidian"}
+  - decir: {texto: "Modo descanso. Te lo has ganado."}
+
+# ---------- Briefing de la mañana (fase 5) ----------
+briefing:
+  automatico: true            # Te da el resumen del día solo, una vez al día
+  hora: "08:00"               # A partir de esta hora (hasta mediodía)
+
+# ---------- Control desde el móvil (fase 5, opcional) ----------
+telegram:
+  token: ""                   # Token del bot que te da @BotFather
+  usuarios_permitidos: []     # Tu ID numérico de Telegram (por seguridad)

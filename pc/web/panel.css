@@ -1,0 +1,96 @@
+/* ================================================================
+   Panel de Jarvis: sobrio. Fondo neutro, una sola tipografía del sistema, un acento.
+   ================================================================ */
+:root {
+  --fondo: #111317; --superficie: #171a1f; --linea: #262a31; --linea-fuerte: #343943;
+  --texto: #e7e9ec; --texto-2: #a3a9b3; --texto-3: #6c737e; --acento: #4fc3f7; --peligro: #ef6b6b;
+  font: 400 14px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--fondo); color: var(--texto); }
+body { display: grid; grid-template-columns: 200px 1fr; }
+button, input, select { font: inherit; color: inherit; }
+
+/* ---- Menú lateral ---- */
+#menu { display: flex; flex-direction: column; gap: 2px; padding: 20px 12px; border-right: 1px solid var(--linea); }
+.marca { font: 600 15px "Segoe UI Variable Display", "Segoe UI", sans-serif; letter-spacing: 0.02em; padding: 4px 12px 18px; }
+#menu button { text-align: left; background: none; border: 0; border-radius: 6px; padding: 8px 12px; color: var(--texto-2); cursor: pointer; }
+#menu button:hover { background: var(--superficie); color: var(--texto); }
+#menu button.activa { background: var(--superficie); color: var(--texto); box-shadow: inset 2px 0 0 var(--acento); }
+.hueco { flex: 1; }
+#estado-linea { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: var(--texto-3); font-size: 12px; }
+#punto { width: 7px; height: 7px; border-radius: 50%; background: var(--texto-3); }
+body.conectado #punto { background: var(--acento); }
+
+/* ---- Secciones ---- */
+main { overflow: auto; padding: 28px 36px; }
+.seccion { display: none; max-width: 980px; }
+.seccion.activa { display: block; }
+header h1 { font: 600 20px "Segoe UI Variable Display", "Segoe UI", sans-serif; margin: 0 0 4px; }
+header p { margin: 0 0 22px; color: var(--texto-2); }
+h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); margin: 22px 0 10px; }
+.columna h2:first-child, .grupo h2 { margin-top: 0; }
+.dos-columnas { display: grid; grid-template-columns: 1.3fr 1fr; gap: 32px; }
+.vacio { color: var(--texto-3); }
+.oculto { display: none !important; }
+.nota { color: var(--texto-3); font-size: 12px; margin: 8px 0 0; }
+
+/* ---- Conversación ---- */
+#mensajes { display: flex; flex-direction: column; gap: 12px; max-height: 52vh; overflow: auto; padding-right: 6px; }
+.msg small { display: block; color: var(--texto-3); font-size: 11px; margin-bottom: 2px; }
+.msg.usuario span { color: var(--texto-2); }
+.msg.error span { color: var(--peligro); }
+#chat { margin-top: 16px; }
+input, select { background: var(--superficie); border: 1px solid var(--linea); border-radius: 6px; padding: 8px 10px; outline: none; }
+input:focus, select:focus { border-color: var(--acento); }
+#entrada { width: 100%; }
+
+/* ---- Acciones y sistema ---- */
+#lista-acciones { list-style: none; margin: 0; padding: 0; max-height: 34vh; overflow: auto; }
+#lista-acciones li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+#lista-acciones li b { font-weight: 500; }
+#lista-acciones li p { grid-column: 1 / -1; margin: 0; color: var(--texto-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#lista-acciones li time { color: var(--texto-3); font-size: 12px; }
+#lista-acciones li.fallo b { color: var(--peligro); }
+#lista-acciones li.corriendo b { color: var(--acento); }
+.etiqueta { font-size: 11px; color: var(--texto-3); margin-left: 6px; font-weight: 400; }
+#sistema { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; }
+#sistema dt { color: var(--texto-3); }
+#sistema dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* ---- Formularios ---- */
+label { display: grid; grid-template-columns: 220px minmax(0, 340px); align-items: center; gap: 12px; margin: 10px 0; color: var(--texto-2); }
+label.interruptor { display: flex; gap: 10px; }
+label.interruptor input { width: 16px; height: 16px; accent-color: var(--acento); }
+input[type="range"] { accent-color: var(--acento); padding: 0; }
+.grupo { padding: 18px 0 8px; border-bottom: 1px solid var(--linea); }
+button { background: var(--acento); color: #06121a; border: 0; border-radius: 6px; padding: 8px 14px; font-weight: 500; cursor: pointer; }
+button.secundario { background: var(--superficie); color: var(--texto); border: 1px solid var(--linea-fuerte); }
+button.mini { padding: 4px 10px; font-size: 12px; }
+button:hover { filter: brightness(1.1); }
+.fila { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+
+/* ---- Escenas ---- */
+.escena { padding: 14px 0; border-bottom: 1px solid var(--linea); }
+.escena header { display: flex; align-items: center; gap: 8px; }
+.escena header b { flex: 1; font-weight: 600; }
+.escena .frases { color: var(--texto-2); margin: 4px 0 6px; }
+.escena .pasos { color: var(--texto-3); font-size: 12px; }
+#editor-escena { margin: 18px 0; padding: 18px; border: 1px solid var(--linea); border-radius: 8px; }
+.paso-editor { display: grid; grid-template-columns: 1fr 140px 150px auto; gap: 8px; margin: 8px 0; }
+#btn-nueva-escena { margin-top: 18px; }
+
+/* ---- Pantallas ---- */
+#mapa-pantallas { position: relative; height: 200px; border: 1px solid var(--linea); border-radius: 8px; margin-bottom: 16px; }
+.mini-pantalla { position: absolute; border: 1px solid var(--linea-fuerte); border-radius: 4px; background: var(--superficie); overflow: hidden; }
+.mini-pantalla.principal { border-color: var(--acento); }
+.mini-pantalla > span { position: absolute; right: 6px; bottom: 4px; font-size: 12px; color: var(--texto-2); }
+.mini-ventana { position: absolute; border: 1px solid var(--linea-fuerte); background: #1d2128; font-size: 10px; color: var(--texto-3); padding: 1px 4px; overflow: hidden; white-space: nowrap; }
+.fila-pantalla { display: grid; grid-template-columns: 110px 260px 1fr; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+.fila-pantalla small { color: var(--texto-3); }
+#btn-refrescar-pantallas { margin-top: 16px; }
+
+/* ---- Avisos ---- */
+#avisos { position: fixed; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--superficie); border: 1px solid var(--linea-fuerte); border-radius: 8px; padding: 10px 14px; max-width: 360px; }
+.toast.error { border-color: var(--peligro); }

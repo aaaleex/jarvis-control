@@ -1,0 +1,39 @@
+# ============================================================
+#  ESCENAS DE JARVIS
+#  Una escena abre varias apps/webs y coloca cada una en su pantalla.
+#  Pantallas: 1, 2, 3 (número de Windows), principal, izquierda, centro, derecha
+#             o el nombre que les pongas en config.yaml (pantallas.nombres).
+#  Tamaños:   maximizar | mitad_izquierda | mitad_derecha | centrar | normal
+#  Tras guardar este archivo no hace falta reiniciar: Jarvis lo relee solo.
+# ============================================================
+
+vamos_a_jugar:
+  frases: ["vamos a jugar", "a jugar", "hora de jugar", "modo gaming"]
+  pasos:
+  - abrir: epic
+    pantalla: principal
+    tamano: maximizar
+  - abrir: discord
+    pantalla: izquierda      # tu pantalla 2 de Windows es la principal: Discord va a la de la izquierda (pantalla 1)
+    tamano: maximizar
+  - abrir: spotify
+    pantalla: 3
+    tamano: maximizar
+
+modo_estudio:
+  frases: ["modo estudio", "a estudiar", "vamos a estudiar", "hora de estudiar"]
+  pasos:
+  - abrir: vscode
+    pantalla: principal
+    tamano: mitad_izquierda
+  - abrir: obsidian
+    pantalla: principal
+    tamano: mitad_derecha
+  - abrir: spotify
+    pantalla: 3
+    tamano: maximizar
+
+he_terminado:
+  frases: ["he terminado", "ya he terminado", "hemos terminado", "cierra la escena",
+    "fin de la escena"]
+  accion: cerrar_anterior

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jarvis · Panel</title>
+  <link rel="stylesheet" href="/web/panel.css">
+</head>
+<body>
+  <nav id="menu">
+    <div class="marca">Jarvis</div>
+    <button data-seccion="actividad" class="activa">Actividad</button>
+    <button data-seccion="escenas">Escenas</button>
+    <button data-seccion="pantallas">Pantallas</button>
+    <button data-seccion="ajustes">Ajustes</button>
+    <div class="hueco"></div>
+    <div id="estado-linea"><span id="punto"></span><span id="texto-estado">Conectando</span></div>
+  </nav>
+
+  <main>
+    <!-- ===== Actividad: conversación y acciones ===== -->
+    <section id="actividad" class="seccion activa">
+      <header><h1>Actividad</h1><p>Lo que has pedido y lo que ha hecho Jarvis.</p></header>
+      <div class="dos-columnas">
+        <div class="columna">
+          <h2>Conversación</h2>
+          <div id="mensajes"><p class="vacio">Todavía no hay conversación.</p></div>
+          <form id="chat" autocomplete="off">
+            <input id="entrada" placeholder="Escribe una orden y pulsa Intro" maxlength="1000">
+          </form>
+        </div>
+        <div class="columna">
+          <h2>Acciones</h2>
+          <ul id="lista-acciones"><li class="vacio">Sin acciones todavía.</li></ul>
+          <h2>Sistema</h2>
+          <dl id="sistema">
+            <dt>CPU</dt><dd id="v-cpu">—</dd><dt>RAM</dt><dd id="v-ram">—</dd>
+            <dt>GPU</dt><dd id="v-gpu">—</dd><dt>VRAM</dt><dd id="v-vram">—</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Escenas ===== -->
+    <section id="escenas" class="seccion">
+      <header><h1>Escenas</h1><p>Di la frase de una escena («vamos a jugar»). Para guardar lo que tienes abierto: «guarda esta disposición como trabajo».</p></header>
+      <div id="lista-escenas"></div>
+      <div id="editor-escena" class="oculto">
+        <label>Nombre <input id="esc-clave" placeholder="vamos_a_jugar"></label>
+        <label>Frases, separadas por comas <input id="esc-frases" placeholder="vamos a jugar, hora de jugar"></label>
+        <div id="esc-pasos"></div>
+        <div class="fila">
+          <button id="esc-anadir" class="secundario">Añadir paso</button>
+          <span class="hueco"></span>
+          <button id="esc-cancelar" class="secundario">Cancelar</button>
+          <button id="esc-guardar">Guardar</button>
+        </div>
+      </div>
+      <button id="btn-nueva-escena" class="secundario">Nueva escena</button>
+    </section>
+
+    <!-- ===== Pantallas ===== -->
+    <section id="pantallas" class="seccion">
+      <header><h1>Pantallas</h1><p>«Abre Spotify en la pantalla 3», «enséñame Discord», «pasa Chrome a la izquierda».</p></header>
+      <div id="mapa-pantallas"></div>
+      <div id="lista-pantallas"></div>
+      <button id="btn-refrescar-pantallas" class="secundario">Actualizar</button>
+    </section>
+
+    <!-- ===== Ajustes ===== -->
+    <section id="ajustes" class="seccion">
+      <header><h1>Ajustes</h1><p>Se guardan en config.yaml al momento.</p></header>
+      <div class="grupo">
+        <h2>Orbe</h2>
+        <label>Estilo <select data-ajuste="estilo_orbe"><option value="nucleo">Núcleo de energía</option><option value="anillo">Anillo de partículas</option><option value="malla">Malla</option></select></label>
+        <label>Calidad <select data-ajuste="orbe_calidad"><option value="auto">Automática</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></label>
+        <label>Tamaño (px) <input inputmode="numeric" data-ajuste="tamano_orbe"></label>
+        <label class="interruptor"><input type="checkbox" data-ajuste="subtitulos"><span>Subtítulo bajo el orbe</span></label>
+        <label class="interruptor"><input type="checkbox" data-ajuste="sombra_orbe"><span>Velo oscuro detrás (mejor contraste en fondos claros)</span></label>
+        <p class="nota" id="info-orbe"></p>
+      </div>
+      <div class="grupo">
+        <h2>Voz y escucha</h2>
+        <label>Voz <select id="sel-voz" data-ajuste="voz_edge"></select></label>
+        <label>Volumen de la voz <input type="range" min="0" max="100" data-ajuste="volumen_voz"></label>
+        <label class="interruptor"><input type="checkbox" data-ajuste="voz_activada"><span>Responder en voz alta</span></label>
+        <label>Sensibilidad de «Hey Jarvis» <input type="range" min="0.2" max="0.9" step="0.05" data-ajuste="umbral"></label>
+      </div>
+      <div class="grupo">
+        <h2>Cerebro</h2>
+        <label>Proveedor <select data-ajuste="proveedor"><option value="ollama">Ollama (local)</option><option value="claude">Claude (API)</option></select></label>
+        <label>Modelo local <select id="sel-modelo" data-ajuste="modelo"></select></label>
+        <label>Personalidad <select id="sel-personalidad" data-ajuste="personalidad"></select></label>
+        <label>Tu nombre <input data-ajuste="nombre"></label>
+        <label>Ciudad <input data-ajuste="ciudad"></label>
+      </div>
+      <div class="grupo">
+        <h2>General</h2>
+        <label>Cerrar tras minutos sin uso <input inputmode="numeric" data-ajuste="inactividad"></label>
+        <label class="interruptor"><input type="checkbox" data-ajuste="arrancar_con_windows"><span>Iniciar con Windows</span></label>
+        <p class="nota" id="nota-atajos"></p>
+      </div>
+    </section>
+  </main>
+
+  <div id="avisos"></div>
+  <script type="module" src="/web/panel.js"></script>
+</body>
+</html>

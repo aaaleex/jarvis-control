@@ -1,0 +1,434 @@
+[
+  {
+    "etiqueta": "ANTES (estado inicial)",
+    "fecha": "2026-11-03 19:21:51",
+    "vigilante_ram_mb": [
+      116,
+      80
+    ],
+    "ollama_reposo_ram_mb": 59,
+    "vram_reposo_mb": 1054,
+    "atajo_a_ventana_visible_s": 0.04,
+    "listo_s": 254.0,
+    "frio": [
+      {
+        "orden": "¿Qué hora es?",
+        "error": "sin respuesta"
+      },
+      {
+        "orden": "Cuéntame en una frase un dato curioso sobre el espacio.",
+        "accion_hecha_s": 4.94,
+        "primer_texto_s": 27.95,
+        "respuesta_s": 29.08,
+        "texto": "Las estrellas no parpadean en el espacio; el parpadeo es causado por la atmósfera terrestre."
+      }
+    ],
+    "caliente": [
+      {
+        "orden": "¿Qué hora es?",
+        "accion_hecha_s": 1.3,
+        "primer_texto_s": 1.98,
+        "respuesta_s": 2.32,
+        "texto": "Son las 19:26."
+      },
+      {
+        "orden": "Cuéntame en una frase un dato curioso sobre los pulpos.",
+        "accion_hecha_s": 3.0,
+        "primer_texto_s": 16.56,
+        "respuesta_s": 17.44,
+        "texto": "Los pulpos tienen ocho ventosas y pueden consumir parte de su propio cuerpo si están desnutridos."
+      },
+      {
+        "orden": "¿Qué día de la semana es hoy?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 0.91,
+        "respuesta_s": 1.12,
+        "texto": "Hoy es martes."
+      },
+      {
+        "orden": "Sube el volumen un poco",
+        "accion_hecha_s": 2.25,
+        "primer_texto_s": 2.95,
+        "respuesta_s": 3.24,
+        "texto": "El volumen subió un poco."
+      },
+      {
+        "orden": "Baja el volumen un poco",
+        "accion_hecha_s": 1.92,
+        "primer_texto_s": 2.63,
+        "respuesta_s": 2.93,
+        "texto": "El volumen bajó un poco."
+      }
+    ],
+    "jarvis_abierto_ram_mb": [
+      1268,
+      726
+    ],
+    "ollama_cargado_ram_mb": 64,
+    "vram_cargado_mb": 5650
+  },
+  {
+    "etiqueta": "DESPUÉS fase 1 (camino rápido + precarga + prompt corto)",
+    "fecha": "2026-11-03 19:47:40",
+    "vigilante_ram_mb": [
+      125,
+      93
+    ],
+    "dormido_ram_mb": [
+      455,
+      154
+    ],
+    "ollama_reposo_ram_mb": 61,
+    "vram_reposo_mb": 895,
+    "atajo_a_ventana_visible_s": 0.06,
+    "frio": [
+      {
+        "orden": "¿Qué hora es?",
+        "accion_hecha_s": 0.08,
+        "primer_texto_s": 0.08,
+        "respuesta_s": 0.08,
+        "texto": "Son las 19:48.",
+        "desde_atajo_s": 2.6
+      },
+      {
+        "orden": "Hola, ¿qué tal estás?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 15.53,
+        "respuesta_s": 15.92,
+        "texto": "Perfecto, tío. Y tú, ¿cómo va tu noche?",
+        "desde_atajo_s": 18.51
+      }
+    ],
+    "oido_listo_s": 18.5,
+    "caliente": [
+      {
+        "orden": "¿Qué hora es?",
+        "accion_hecha_s": 0.0,
+        "primer_texto_s": 0.0,
+        "respuesta_s": 0.0,
+        "texto": "Son las 19:48."
+      },
+      {
+        "orden": "Hola, ¿qué tal estás?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 0.89,
+        "respuesta_s": 1.33,
+        "texto": "Perfecto, tío. Y tú, ¿cómo va tu noche?"
+      },
+      {
+        "orden": "Cuéntame en una frase un dato curioso sobre los pulpos.",
+        "accion_hecha_s": null,
+        "primer_texto_s": 0.41,
+        "respuesta_s": 1.04,
+        "texto": "Los pulpos tienen un cerebro tan complejo que pueden aprender de sus errores y recordar lo que hicieron mal."
+      },
+      {
+        "orden": "¿Qué día de la semana es hoy?",
+        "accion_hecha_s": 0.0,
+        "primer_texto_s": 0.0,
+        "respuesta_s": 0.0,
+        "texto": "Hoy es martes 3 de noviembre de 2026."
+      },
+      {
+        "orden": "Sube el volumen un poco",
+        "accion_hecha_s": 0.1,
+        "primer_texto_s": 0.1,
+        "respuesta_s": 0.1,
+        "texto": "Volumen al 50."
+      },
+      {
+        "orden": "Baja el volumen un poco",
+        "accion_hecha_s": 0.02,
+        "primer_texto_s": 0.02,
+        "respuesta_s": 0.02,
+        "texto": "Volumen al 40."
+      },
+      {
+        "orden": "¿Por qué el cielo es azul? Contesta en una frase.",
+        "accion_hecha_s": null,
+        "primer_texto_s": 4.01,
+        "respuesta_s": 4.61,
+        "texto": "Porque la luz azul se dispersa más que otras colores cuando pasa por la atmósfera."
+      }
+    ],
+    "jarvis_abierto_ram_mb": [
+      1303,
+      826
+    ],
+    "ollama_cargado_ram_mb": 64,
+    "vram_cargado_mb": 5221
+  },
+  {
+    "etiqueta": "DESPUES fase 1b (codigo precargado, wakeword en 2o plano)",
+    "fecha": "2026-11-03 20:04:35",
+    "vigilante_ram_mb": [
+      131,
+      95
+    ],
+    "dormido_ram_mb": [
+      488,
+      169
+    ],
+    "ollama_reposo_ram_mb": 64,
+    "vram_reposo_mb": 885,
+    "atajo_a_ventana_visible_s": 0.04,
+    "frio": [
+      {
+        "orden": "¿Qué hora es?",
+        "accion_hecha_s": 0.01,
+        "primer_texto_s": 0.01,
+        "respuesta_s": 0.01,
+        "texto": "Son las 20:05.",
+        "desde_atajo_s": 2.48
+      },
+      {
+        "orden": "Hola, ¿qué tal estás?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 9.73,
+        "respuesta_s": 10.05,
+        "texto": "Perfecto, tío. ¿Y tú? ¿Ya has terminado de ver el partido?",
+        "desde_atajo_s": 12.53
+      }
+    ],
+    "oido_listo_s": 12.5,
+    "caliente": [
+      {
+        "orden": "¿Qué hora es?",
+        "accion_hecha_s": 0.0,
+        "primer_texto_s": 0.0,
+        "respuesta_s": 0.0,
+        "texto": "Son las 20:05."
+      },
+      {
+        "orden": "Hola, ¿qué tal estás?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 0.57,
+        "respuesta_s": 0.83,
+        "texto": "Perfecto, tío. ¿Ya has terminado de ver el partido?"
+      },
+      {
+        "orden": "Cuéntame en una frase un dato curioso sobre los pulpos.",
+        "accion_hecha_s": null,
+        "primer_texto_s": 0.27,
+        "respuesta_s": 0.65,
+        "texto": "Los pulpos tienen un cerebro tan complejo que pueden aprender y recordar, y hasta pueden usar herramientas."
+      },
+      {
+        "orden": "¿Qué día de la semana es hoy?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 0.0,
+        "respuesta_s": 0.0,
+        "texto": "Hoy es martes 3 de noviembre de 2026."
+      },
+      {
+        "orden": "Sube el volumen un poco",
+        "accion_hecha_s": 0.06,
+        "primer_texto_s": 0.07,
+        "respuesta_s": 0.07,
+        "texto": "Volumen al 50."
+      },
+      {
+        "orden": "Baja el volumen un poco",
+        "accion_hecha_s": 0.02,
+        "primer_texto_s": 0.02,
+        "respuesta_s": 0.02,
+        "texto": "Volumen al 40."
+      },
+      {
+        "orden": "¿Por qué el cielo es azul? Contesta en una frase.",
+        "accion_hecha_s": null,
+        "primer_texto_s": 3.19,
+        "respuesta_s": 3.56,
+        "texto": "Porque la luz azul se dispersa más que otras colores cuando pasa por la atmósfera."
+      }
+    ],
+    "jarvis_abierto_ram_mb": [
+      1120,
+      696
+    ],
+    "ollama_cargado_ram_mb": 66,
+    "vram_cargado_mb": 5100
+  },
+  {
+    "etiqueta": "final",
+    "fecha": "2026-11-04 00:45:07",
+    "vigilante_ram_mb": [
+      117,
+      80
+    ],
+    "dormido_ram_mb": [
+      1077,
+      662
+    ],
+    "ollama_reposo_ram_mb": 77,
+    "vram_reposo_mb": 1485,
+    "atajo_a_ventana_visible_s": 0.05,
+    "frio": [
+      {
+        "orden": "¿Qué hora es?",
+        "accion_hecha_s": 0.08,
+        "primer_texto_s": 0.08,
+        "respuesta_s": 0.08,
+        "texto": "Son las 00:45.",
+        "desde_atajo_s": 3.08
+      },
+      {
+        "orden": "Hola, ¿qué tal estás?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 21.71,
+        "respuesta_s": 22.6,
+        "texto": "Perfecto, tío. ¿Y tú? ¿Listo para que te cuente el clima o algo más?",
+        "desde_atajo_s": 25.68
+      }
+    ],
+    "oido_listo_s": 25.7,
+    "caliente": [
+      {
+        "orden": "¿Qué hora es?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 0.0,
+        "respuesta_s": 0.0,
+        "texto": "Son las 00:45."
+      },
+      {
+        "orden": "Hola, ¿qué tal estás?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 1.15,
+        "respuesta_s": 1.59,
+        "texto": "Perfecto, tío. ¿Y tú? ¿Listo para que te cuente el clima o algo más?"
+      },
+      {
+        "orden": "Cuéntame en una frase un dato curioso sobre los pulpos.",
+        "accion_hecha_s": null,
+        "primer_texto_s": 0.38,
+        "respuesta_s": 0.87,
+        "texto": "Los pulpos tienen un cerebro tan complejo que pueden aprender a resolver acertijos y hasta jugar al ajedrez."
+      },
+      {
+        "orden": "¿Qué día de la semana es hoy?",
+        "accion_hecha_s": 0.0,
+        "primer_texto_s": 0.0,
+        "respuesta_s": 0.0,
+        "texto": "Hoy es miércoles 4 de noviembre de 2026."
+      },
+      {
+        "orden": "Sube el volumen un poco",
+        "accion_hecha_s": 0.34,
+        "primer_texto_s": 0.34,
+        "respuesta_s": 0.34,
+        "texto": "Volumen al 58."
+      },
+      {
+        "orden": "Baja el volumen un poco",
+        "accion_hecha_s": 0.02,
+        "primer_texto_s": 0.02,
+        "respuesta_s": 0.02,
+        "texto": "Volumen al 48."
+      },
+      {
+        "orden": "¿Por qué el cielo es azul? Contesta en una frase.",
+        "accion_hecha_s": null,
+        "primer_texto_s": 3.33,
+        "respuesta_s": 3.75,
+        "texto": "Porque la luz azul se dispersa más que otras colores cuando pasa por la atmósfera."
+      }
+    ],
+    "jarvis_abierto_ram_mb": [
+      1209,
+      753
+    ],
+    "ollama_cargado_ram_mb": 82,
+    "vram_cargado_mb": 5204
+  },
+  {
+    "etiqueta": "noche",
+    "fecha": "2026-11-04 02:44:34",
+    "vigilante_ram_mb": [
+      129,
+      94
+    ],
+    "dormido_ram_mb": [
+      1123,
+      704
+    ],
+    "ollama_reposo_ram_mb": 86,
+    "vram_reposo_mb": 1364,
+    "atajo_a_ventana_visible_s": 0.05,
+    "frio": [
+      {
+        "orden": "¿Qué hora es?",
+        "accion_hecha_s": 0.02,
+        "primer_texto_s": 0.02,
+        "respuesta_s": 0.02,
+        "texto": "Son las 02:44.",
+        "desde_atajo_s": 2.52
+      },
+      {
+        "orden": "Hola, ¿qué tal estás?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 12.47,
+        "respuesta_s": 12.8,
+        "texto": "Perfecto, ¿y tú? Estoy listo para cualquier cosa.",
+        "desde_atajo_s": 15.32
+      }
+    ],
+    "oido_listo_s": 15.3,
+    "caliente": [
+      {
+        "orden": "¿Qué hora es?",
+        "accion_hecha_s": 0.0,
+        "primer_texto_s": 0.0,
+        "respuesta_s": 0.0,
+        "texto": "Son las 02:45."
+      },
+      {
+        "orden": "Hola, ¿qué tal estás?",
+        "accion_hecha_s": null,
+        "primer_texto_s": 1.1,
+        "respuesta_s": 1.46,
+        "texto": "Bien, ¿y tú? Estoy siempre listo para ayudarte."
+      },
+      {
+        "orden": "Cuéntame en una frase un dato curioso sobre los pulpos.",
+        "accion_hecha_s": null,
+        "primer_texto_s": 0.36,
+        "respuesta_s": 0.8,
+        "texto": "Los pulpos tienen un cerebro tan complejo que pueden aprender de sus errores y recordar lo que hicieron mal."
+      },
+      {
+        "orden": "¿Qué día de la semana es hoy?",
+        "accion_hecha_s": 0.0,
+        "primer_texto_s": 0.0,
+        "respuesta_s": 0.0,
+        "texto": "Hoy es miércoles 4 de noviembre de 2026."
+      },
+      {
+        "orden": "Sube el volumen un poco",
+        "accion_hecha_s": 0.07,
+        "primer_texto_s": 0.07,
+        "respuesta_s": 0.07,
+        "texto": "Volumen al 58."
+      },
+      {
+        "orden": "Baja el volumen un poco",
+        "accion_hecha_s": 0.03,
+        "primer_texto_s": 0.03,
+        "respuesta_s": 0.03,
+        "texto": "Volumen al 48."
+      },
+      {
+        "orden": "¿Por qué el cielo es azul? Contesta en una frase.",
+        "accion_hecha_s": null,
+        "primer_texto_s": 3.3,
+        "respuesta_s": 3.68,
+        "texto": "Porque las moléculas de aire dispersan la luz azul más que otras colores."
+      }
+    ],
+    "jarvis_abierto_ram_mb": [
+      1163,
+      716
+    ],
+    "ollama_cargado_ram_mb": 86,
+    "vram_cargado_mb": 5157
+  }
+]
